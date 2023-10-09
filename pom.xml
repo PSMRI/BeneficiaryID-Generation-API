@@ -271,7 +271,7 @@
 									<directory>src/main/environment</directory>
 									<filtering>true</filtering>
 									<includes>
-										<include>common_${environment}.properties</include>
+										<include>bengen_${environment}.properties</include>
 									</includes>
 								</resource>
 							</resources>
