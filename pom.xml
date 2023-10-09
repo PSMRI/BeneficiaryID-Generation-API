@@ -340,7 +340,7 @@
 			<properties>
 				<final-name>bengenapi-v1.0</final-name>
 				<target-properties>target/classes/application.properties</target-properties>
-				<source-properties>src/main/environment/bengen_${environment}.properties</source-properties>
+				<source-properties>target/classes/bengen_${environment}.properties</source-properties>
 			</properties>
 			<build>
 				<finalName>bengenapi-v1.0</finalName>
