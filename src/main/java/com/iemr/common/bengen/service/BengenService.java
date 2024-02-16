@@ -35,13 +35,14 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.xml.bind.DatatypeConverter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.iemr.common.bengen.utils.Generator;
+
+import jakarta.xml.bind.DatatypeConverter;
 
 @Service
 public class BengenService {
@@ -104,9 +105,9 @@ public class BengenService {
 		decAesCipher.init(Cipher.DECRYPT_MODE, key);
 		byte[] decTxt = decAesCipher.doFinal(encTxt);
 		
-		logger.info("txt: " + txt 
-				+ "\nencTxt: " + DatatypeConverter.printHexBinary(encTxt)
-				+ "\ndecTxt: " + DatatypeConverter.printHexBinary(decTxt));
+		//logger.info("txt: " + txt 
+			//	+ "\nencTxt: " + DatatypeConverter.printHexBinary(encTxt)
+				//+ "\ndecTxt: " + DatatypeConverter.printHexBinary(decTxt));
 	}
 	
 	public void hashing() throws NoSuchAlgorithmException {
