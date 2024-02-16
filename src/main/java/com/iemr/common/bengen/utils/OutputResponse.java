@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT ï¿½ Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -31,7 +31,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-// import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.LongSerializationPolicy;
 import com.google.gson.annotations.Expose;
@@ -45,12 +44,6 @@ public class OutputResponse
 
 	@Expose
 	private JsonElement response;
-
-	/*
-	 * Response JSON: { "methodName" : "<Method_Name>", "dataObjectType" : "Object_Name", "dataJsonType		:	"object
-	 * or array or primitive or null" "data" : "<json of Object_Name>", "statusCode" : <number>, "statusMessage" :
-	 * "<message>" "statusMessageLong" : "<messageLong> }
-	 */
 
 	public static class Builder
 	{

@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT ï¿½ Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -23,12 +23,12 @@ package com.iemr.common.bengen.domain;
 
 import java.sql.Timestamp;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.LongSerializationPolicy;

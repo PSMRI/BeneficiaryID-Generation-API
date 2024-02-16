@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT   Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -44,7 +44,6 @@ public interface BeneficiaryIdRepo extends CrudRepository<BeneficiaryId, BigInte
 	BeneficiaryId findFirstByProvisionedAndReserved(Boolean isprovisioned, Boolean isReserved);
 	BeneficiaryId findFirstByCreatedDateBetween(Timestamp fromDate, Timestamp toDate);
 	
-	//Long countBybeneficiaryId();
 	Long countByReserved(Boolean isReserved);
 	Long countByReservedAndReservedUntilBetween(Boolean isReserved, Timestamp fromDate, Timestamp toDate);
 	Long countByProvisionedAndReserved(Boolean isprovisioned, Boolean isReserved);

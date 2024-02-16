@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT ï¿½ Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -26,7 +26,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.stereotype.Service;
 
 import com.iemr.common.bengen.utils.config.ConfigProperties;
@@ -37,22 +36,13 @@ import com.iemr.common.bengen.utils.sessionobject.SessionObject;
 @Service
 public class Validator
 {
-	// private static SessionObject session;
-
 	private SessionObject session;
 
 	@Autowired(required = true)
-	@Required
 	public void setSessionObject(SessionObject sessionObject)
 	{
 		this.session = sessionObject;
 	}
-
-	// private static void setSessionObject() {
-	// if (session == null) {
-	// session = new SessionObject();
-	// }
-	// }
 
 	private static Boolean enableIPValidation = false;
 

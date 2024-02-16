@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT ï¿½ Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -24,8 +24,6 @@ package com.iemr.common.bengen.config.quartz;
 import java.io.IOException;
 import java.util.Properties;
 
-import javax.annotation.PostConstruct;
-
 import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +39,8 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.iemr.common.bengen.utils.config.ConfigProperties;
+
+import jakarta.annotation.PostConstruct;
 
 @Configuration
 public class QuartzConfig
