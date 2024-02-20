@@ -59,8 +59,8 @@ public interface BeneficiaryIdRepo extends CrudRepository<BeneficiaryId, BigInte
 	Long countByReservedForPSMapId(Integer psMapId);
 	Long countByReservedForPSMapIdAndProvisionedAndReserved(Integer psMapId, Boolean isprovisioned, Boolean isReserved);	
 	
-		@Query(" SELECT count(*) from M_BeneficiaryRegidMapping benregMap "
-			  + " WHERE benregMap.provisioned =false and benregMap.reserved =false")
+		@Query(value=" SELECT count(*) from M_BeneficiaryRegidMapping benregMap "
+			  + " WHERE benregMap.provisioned =false and benregMap.reserved =false",nativeQuery=true)
 		Long countBenID();
 
 		@Query(nativeQuery = true, value = "Select benregMap.benRegId, benregMap.beneficiaryId, benregMap.CreatedDate "
