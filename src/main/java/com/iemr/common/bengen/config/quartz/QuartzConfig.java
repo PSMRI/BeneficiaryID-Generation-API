@@ -42,6 +42,8 @@ import com.iemr.common.bengen.utils.config.ConfigProperties;
 
 import jakarta.annotation.PostConstruct;
 
+
+
 @Configuration
 public class QuartzConfig
 {
