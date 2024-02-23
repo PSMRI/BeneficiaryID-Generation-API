@@ -105,9 +105,9 @@ public class BengenService {
 		decAesCipher.init(Cipher.DECRYPT_MODE, key);
 		byte[] decTxt = decAesCipher.doFinal(encTxt);
 		
-		//logger.info("txt: " + txt 
-			//	+ "\nencTxt: " + DatatypeConverter.printHexBinary(encTxt)
-				//+ "\ndecTxt: " + DatatypeConverter.printHexBinary(decTxt));
+		logger.info("txt: " + txt 
+				+ "\nencTxt: " + DatatypeConverter.printHexBinary(encTxt)
+				+ "\ndecTxt: " + DatatypeConverter.printHexBinary(decTxt));
 	}
 	
 	public void hashing() throws NoSuchAlgorithmException {

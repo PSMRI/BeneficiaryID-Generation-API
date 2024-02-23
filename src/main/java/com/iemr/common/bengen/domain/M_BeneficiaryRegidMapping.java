@@ -23,17 +23,16 @@ package com.iemr.common.bengen.domain;
 
 import java.sql.Timestamp;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.LongSerializationPolicy;
+import com.google.gson.annotations.Expose;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-
-import com.google.gson.GsonBuilder;
-import com.google.gson.LongSerializationPolicy;
-import com.google.gson.annotations.Expose;
-
 import lombok.Data;
 
 @Data

@@ -35,8 +35,11 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-@Configuration 
+@Configuration /*
+				 * (defaultAutowire = Autowire.BY_TYPE, defaultLazy = Lazy.FALSE
+				 */
 @PropertySource("classpath:/application.properties")
+// @Component
 @Component
 public class ConfigProperties {
 	private static Properties properties;
@@ -51,9 +54,15 @@ public class ConfigProperties {
 	private static void initalizeProperties() {
 		if (properties == null) {
 			properties = new Properties();
+
+			// FileInputStream fis;
 			try {
+				// this.getClass().getResourceAsStream(
+
 				InputStream fis = ConfigProperties.class.getResourceAsStream("/application.properties");
 				properties.load(fis);
+				// properties.
+				// fis.close();
 			} catch (IOException e) {
 				logger.error("Loading of config file failed with error " + e.getLocalizedMessage(), e);
 			}
@@ -111,7 +120,7 @@ public class ConfigProperties {
 			if (properties == null) {
 				initalizeProperties();
 			}
-			
+			// result = environment.getProperty(propertyName);
 			result = properties.getProperty(propertyName);
 		} catch (Exception e) {
 			logger.error(propertyName + " retrival failed.", e);

@@ -1,5 +1,5 @@
 /*
-* AMRIT   Accessible Medical Records via Integrated Technology
+* AMRIT – Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -39,6 +39,13 @@ import com.iemr.common.bengen.utils.validator.Validator;
 @Configuration
 public class IEMRApplBeans
 {
+/*	@Bean
+	public KMService getOpenKMService()
+	{
+		KMService kmService = new OpenKMServiceImpl();
+		return kmService;
+	}*/
+
 	@Bean
 	public Validator getVaidator()
 	{
@@ -78,6 +85,17 @@ public class IEMRApplBeans
 		return new RedisStorage();
 	}
 
+	// @Beanss
+	// public RedisConnection redisConnection()
+	// {
+	// return new RedisConnection();
+	// }
+
+	// @Configuration
+	// @EnableRedisHttpSession
+	// public class Config
+	// {
+
 	 private @Value("${spring.redis.host}") String redisHost;
 	    private @Value("${spring.redis.port}") int redisPort;
 	    
@@ -88,4 +106,27 @@ public class IEMRApplBeans
 		
 		return new LettuceConnectionFactory(redisHost,redisPort);
 	}
+	// }
+
+/*	@Bean
+	public RedisHttpSessionConfiguration redisSession()
+	{
+		return new RedisHttpSessionConfiguration();
+	}*/
+
+	// @Bean
+	// public HTTPRequestInterceptor myInterceptor()
+	// {
+	// return new HTTPRequestInterceptor();
+	// }
+	// @Bean
+	// public KMService getOpenKMService()
+	// {
+	// KMService kmService = new OpenKMServiceImpl();
+	// return kmService;
+	// }
+
+	// public static void main(String[] args) {
+	// SpringApplication.run(CommonMain.class, args);
+	// }
 }

@@ -36,6 +36,8 @@ import com.iemr.common.bengen.utils.sessionobject.SessionObject;
 @Service
 public class Validator
 {
+	// private static SessionObject session;
+
 	private SessionObject session;
 
 	@Autowired(required = true)
@@ -43,6 +45,12 @@ public class Validator
 	{
 		this.session = sessionObject;
 	}
+
+	// private static void setSessionObject() {
+	// if (session == null) {
+	// session = new SessionObject();
+	// }
+	// }
 
 	private static Boolean enableIPValidation = false;
 

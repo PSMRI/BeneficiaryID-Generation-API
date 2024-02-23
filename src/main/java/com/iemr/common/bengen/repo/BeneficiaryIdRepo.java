@@ -1,5 +1,5 @@
 /*
-* AMRIT   Accessible Medical Records via Integrated Technology
+* AMRIT – Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -44,6 +44,7 @@ public interface BeneficiaryIdRepo extends CrudRepository<BeneficiaryId, BigInte
 	BeneficiaryId findFirstByProvisionedAndReserved(Boolean isprovisioned, Boolean isReserved);
 	BeneficiaryId findFirstByCreatedDateBetween(Timestamp fromDate, Timestamp toDate);
 	
+	//Long countBybeneficiaryId();
 	Long countByReserved(Boolean isReserved);
 	Long countByReservedAndReservedUntilBetween(Boolean isReserved, Timestamp fromDate, Timestamp toDate);
 	Long countByProvisionedAndReserved(Boolean isprovisioned, Boolean isReserved);
@@ -59,8 +60,8 @@ public interface BeneficiaryIdRepo extends CrudRepository<BeneficiaryId, BigInte
 	Long countByReservedForPSMapId(Integer psMapId);
 	Long countByReservedForPSMapIdAndProvisionedAndReserved(Integer psMapId, Boolean isprovisioned, Boolean isReserved);	
 	
-		@Query(value=" SELECT count(*) from M_BeneficiaryRegidMapping benregMap "
-			  + " WHERE benregMap.provisioned =false and benregMap.reserved =false",nativeQuery=true)
+		@Query(" SELECT count(*) from M_BeneficiaryRegidMapping benregMap "
+			  + " WHERE benregMap.provisioned =false and benregMap.reserved =false")
 		Long countBenID();
 
 		@Query(nativeQuery = true, value = "Select benregMap.benRegId, benregMap.beneficiaryId, benregMap.CreatedDate "

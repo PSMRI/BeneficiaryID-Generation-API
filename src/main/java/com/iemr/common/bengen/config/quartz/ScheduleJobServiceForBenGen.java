@@ -1,5 +1,5 @@
 /*
-* AMRIT   Accessible Medical Records via Integrated Technology
+* AMRIT � Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -40,7 +40,6 @@ public class ScheduleJobServiceForBenGen implements Job
 {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
-	@Autowired
 	BeneficiaryIdRepo beneficiaryIdRepo;
 	
 	@Autowired

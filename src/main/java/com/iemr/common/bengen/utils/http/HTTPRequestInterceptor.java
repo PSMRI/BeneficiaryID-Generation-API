@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.WebRequestInterceptor;
+import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.WebRequestHandlerInterceptorAdapter;
 
@@ -38,13 +38,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.MediaType;
 
 @Component
-public class HTTPRequestInterceptor extends WebRequestHandlerInterceptorAdapter
+public class HTTPRequestInterceptor implements HandlerInterceptor
 {
-	public HTTPRequestInterceptor(WebRequestInterceptor requestInterceptor) {
-		super(requestInterceptor);
-		// TODO Auto-generated constructor stub
-	}
-
 	private Validator validator;
 
 	Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
@@ -62,6 +57,8 @@ public class HTTPRequestInterceptor extends WebRequestHandlerInterceptorAdapter
 	{
 		this.sessionObject = sessionObject;
 	}
+
+	@Override
 
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) throws Exception
 
@@ -157,6 +154,7 @@ public class HTTPRequestInterceptor extends WebRequestHandlerInterceptorAdapter
 
 	}
 
+	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object object, Exception arg3)
 			throws Exception
 	{

@@ -1,5 +1,5 @@
-package com.iemr.common.bengen.utils;/*
-* AMRIT   Accessible Medical Records via Integrated Technology
+/*
+* AMRIT – Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -19,10 +19,17 @@ package com.iemr.common.bengen.utils;/*
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see https://www.gnu.org/licenses/.
 */
+package com.iemr.common.bengen.utils;
+
 import java.math.BigInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+* 
+*
+* @author Sunil.K.Sundaram
+*/
 public class Generator {
 	
 	private static final Logger log = LoggerFactory.getLogger(Generator.class);
