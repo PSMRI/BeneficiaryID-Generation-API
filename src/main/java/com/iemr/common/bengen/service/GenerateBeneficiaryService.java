@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT ï¿½ Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -53,7 +53,6 @@ public class GenerateBeneficiaryService  {
 	@Autowired
 	JdbcTemplate jdbcTemplate;
 	
-	@Autowired
 	BeneficiaryIdRepo beneficiaryIdRepo;
 
 	public void generateBeneficiaryIDs() throws Exception {

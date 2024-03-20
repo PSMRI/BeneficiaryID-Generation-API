@@ -24,15 +24,14 @@ package com.iemr.common.bengen.controller;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.reflect.TypeToken;
@@ -42,8 +41,8 @@ import com.iemr.common.bengen.utils.OutputResponse;
 import com.iemr.common.bengen.utils.mapper.InputMapper;
 import com.iemr.common.bengen.utils.mapper.OutputMapper;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RequestMapping("/generateBeneficiaryController")
 @RestController
@@ -54,11 +53,10 @@ public class GenerateBeneficiaryController {
 	@Autowired
 	GenerateBeneficiaryService generateBeneficiaryService;
 	
-	@ApiOperation(value = "Generate beneficiary Ids")
+	@Operation(summary = "Generate beneficiary Ids")
 	@CrossOrigin()
-	@RequestMapping(value = "/generateBeneficiaryIDs", headers = "Authorization", method = {
-			RequestMethod.POST }, produces = { "application/json" })
-	public String getBeneficiaryIDs(@ApiParam("{\"benIDRequired\":\"Integer\",\"vanID\":\"Integer\"}") @RequestBody String request, HttpServletRequest httpRequest)
+	@PostMapping(value = "/generateBeneficiaryIDs", headers = "Authorization", produces = { "application/json" })
+	public String getBeneficiaryIDs(@Param("{\"benIDRequired\":\"Integer\",\"vanID\":\"Integer\"}") @RequestBody String request, HttpServletRequest httpRequest)
 	{
 		logger.info("generateBeneficiaryIDs request "+request.toString());
 			
