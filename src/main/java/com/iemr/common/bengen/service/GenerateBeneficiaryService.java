@@ -53,7 +53,6 @@ public class GenerateBeneficiaryService  {
 	@Autowired
 	JdbcTemplate jdbcTemplate;
 	
-	@Autowired
 	BeneficiaryIdRepo beneficiaryIdRepo;
 
 	public void generateBeneficiaryIDs() throws Exception {
