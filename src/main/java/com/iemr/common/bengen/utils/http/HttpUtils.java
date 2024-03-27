@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT ï¿½ Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -23,15 +23,16 @@ package com.iemr.common.bengen.utils.http;
 
 import java.util.HashMap;
 
-import javax.ws.rs.core.MediaType;
-
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import jakarta.ws.rs.core.MediaType;
 
 @Component
 public class HttpUtils {
@@ -42,7 +43,7 @@ public class HttpUtils {
 	// @Autowired
 	private HttpHeaders headers;
 	// @Autowired
-	private HttpStatus status;
+	private HttpStatusCode status;
 
 	// @Autowired(required = true)
 	// @Qualifier("hibernateCriteriaBuilder")
@@ -161,11 +162,12 @@ public class HttpUtils {
 		return body;
 	}*/
 
-	public HttpStatus getStatus() {
+	public HttpStatusCode getStatus() {
 		return status;
 	}
+		
 
-	public void setStatus(HttpStatus status) {
-		this.status = status;
+	public void setStatus(HttpStatusCode httpStatusCode) {
+		this.status = httpStatusCode;
 	}
 }
