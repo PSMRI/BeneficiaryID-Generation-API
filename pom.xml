@@ -32,7 +32,7 @@
 		<final-name>bengenapi-v1.0</final-name>
 		<environment>dev</environment>
 		<target-properties>target/classes/application.properties</target-properties>
-		<source-properties>src/main/environment/bengen_${environment}.properties</source-properties>
+		<source-properties>target/classes/bengen_${environment}.properties</source-properties>
 		<hostname-dev>10.208.122.38</hostname-dev>
 		<port-dev>9990</port-dev>
 		<username>admin</username>
@@ -72,13 +72,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-rest</artifactId>
 		</dependency>
-
-<!-- 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
-			<scope>provided</scope>
-		</dependency> -->
 
 		<!-- Need this to compile JSP -->
 		<dependency>
@@ -245,42 +238,13 @@
 	</dependencies>
 
 	<build>
-		<!-- <finalName>helpLinebengenAPIV1</finalName> -->
 		<finalName>bengenapi-v1.0</finalName>
 		<plugins>
-		
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.0.2</version>
 			</plugin>
-			<!-- <plugin>
-				<groupId>pl.project13.maven</groupId>
-				<artifactId>git-commit-id-plugin</artifactId>
-				<version>2.2.4</version>
-				<executions>
-					<execution>
-						<id>get-the-git-infos</id>
-						<goals>
-							<goal>revision</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
-					<prefix>git</prefix>
-					<verbose>false</verbose>
-					<generateGitPropertiesFile>true</generateGitPropertiesFile>
-					<generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
-					<format>json</format>
-					<gitDescribe>
-						<skip>false</skip>
-						<always>false</always>
-						<dirty>-dirty</dirty>
-					</gitDescribe>
-				</configuration>
-			</plugin> -->
-		
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -289,40 +253,34 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 			</plugin>
-
-			<!-- <plugin>
-				<groupId>org.wildfly.plugins</groupId>
-				<artifactId>wildfly-maven-plugin</artifactId>
-				<version>1.2.1.Final</version>
-				<configuration>
-					<id>${server-id}</id>
-					<hostname>$${server-hostname}</hostname>
-					<port>$${server-port}</port>
-				</configuration>
-				<executions>
-
-					<execution>
-						<id>Undeploy</id>
-						<phase>install</phase>
-						<goals>
-							<goal>undeploy</goal>
-						</goals>
-					</execution>
-					<execution> <id>Shutdown</id> <phase>install</phase> <goals> <goal>shutdown</goal> 
-						</goals> 
-					<execution>
-						<id>Install</id>
-						<phase>install</phase>
-						<goals>
-							<goal>deploy</goal>
-						</goals>
-					</execution>
-					 <id>Start</id> <phase>install</phase> <goals> <goal>start</goal> 
-						</goals> 
-
-				</executions>
-			</plugin> -->
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>filter-resources</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>resources</goal>
+						</goals>
+						<configuration>
+							<delimiters>@</delimiters>
+							<useDefaultDelimiters>false</useDefaultDelimiters>
+							<resources>
+								<resource>
+									<directory>src/main/environment</directory>
+									<filtering>true</filtering>
+									<includes>
+										<include>bengen_${environment}.properties</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
 					<execution>
@@ -330,17 +288,33 @@
 						<goals>
 							<goal>run</goal>
 						</goals>
-						<id>properties-updated</id>
+						<id>merge-properties</id>
 						<configuration>
 							<target>
-								<echo>concatinating properties file ${target-properties} and
-									${source-properties}</echo>
+								<echo>
+									concatenating properties file ${target-properties} and
+									${source-properties}
+								</echo>
 								<concat destfile="${target-properties}" append="yes"
-									force="yes">
+										force="yes">
 									<fileset file="${source-properties}">
 									</fileset>
 								</concat>
 							</target>
+						</configuration>
+					</execution>
+					<execution>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<id>clean-property-files</id>
+						<configuration>
+							<tasks>
+								<delete>
+									<file file="${source-properties}"/>
+								</delete>
+							</tasks>
 						</configuration>
 					</execution>
 				</executions>
@@ -366,7 +340,7 @@
 			<properties>
 				<final-name>bengenapi-v1.0</final-name>
 				<target-properties>target/classes/application.properties</target-properties>
-				<source-properties>src/main/environment/bengen_${environment}.properties</source-properties>
+				<source-properties>target/classes/bengen_${environment}.properties</source-properties>
 			</properties>
 			<build>
 				<finalName>bengenapi-v1.0</finalName>

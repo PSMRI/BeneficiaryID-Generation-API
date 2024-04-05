@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT ï¿½ Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -106,8 +106,14 @@ public class GenerateBeneficiaryService  {
 		long strt = System.currentTimeMillis();
 		
 		Generator g = new Generator();	
-		StringBuffer sb = new StringBuffer("INSERT INTO `db_identity`.`m_beneficiaryregidmapping` (`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`,`CreatedBy`) VALUES ");
-		
+		StringBuffer sb = new StringBuffer();
+		Boolean is1097 = ConfigProperties.getBoolean("is1097");
+		if(is1097) {
+	         sb = new StringBuffer("INSERT INTO `db_1097_identity`.`m_beneficiaryregidmapping` (`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`,`CreatedBy`) VALUES ");
+		}
+		else {
+			 sb = new StringBuffer("INSERT INTO `db_identity`.`m_beneficiaryregidmapping` (`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`,`CreatedBy`) VALUES ");
+		}
 		// INSERT INTO `db_identity`.`m_beneficiaryregidmapping` (`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`,`CreatedBy`) VALUES
 		// (<{BeneficiaryID: }>, <{Provisioned: b'0'}>, <{Deleted: b'0'}>, <{CreatedDate: CURRENT_TIMESTAMP}>, <{CreatedBy: }>);
 		
