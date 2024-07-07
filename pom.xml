@@ -325,9 +325,6 @@ https://mvnrepository.com/artifact/io.lettuce/lettuce-core
 			<id>1097_bengen</id>
 			<properties>
 				<final-name>1097bengenapi-v1.0</final-name>
-				<!-- <target-properties>target/classes/application.properties</target-properties>
-				<source-properties>
-					target/classes/bengen_${environment}.properties</source-properties> -->
 			</properties>
 			<build>
 				<finalName>1097bengenapi-v1.0</finalName>
