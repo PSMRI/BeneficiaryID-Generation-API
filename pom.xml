@@ -31,7 +31,7 @@
 
 		<maven.test.skip>true</maven.test.skip>
 		<final-name>bengenapi-v1.0</final-name>
-		<environment>dev</environment>
+		<environment>{ENV_VAR}</environment>
 		<target-properties>target/classes/application.properties</target-properties>
 		<source-properties>target/classes/bengen_${environment}.properties</source-properties>
 		<hostname-dev>10.208.122.38</hostname-dev>
