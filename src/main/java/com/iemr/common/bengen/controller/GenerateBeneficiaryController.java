@@ -58,8 +58,6 @@ public class GenerateBeneficiaryController {
 	@PostMapping(value = "/generateBeneficiaryIDs", headers = "Authorization", produces = { "application/json" })
 	public String getBeneficiaryIDs(@Param("{\"benIDRequired\":\"Integer\",\"vanID\":\"Integer\"}") @RequestBody String request, HttpServletRequest httpRequest)
 	{
-		String data = request.toString();
-		
 		
 			M_BeneficiaryRegidMapping benMapping= InputMapper.gson().fromJson(request, M_BeneficiaryRegidMapping.class);
 			
