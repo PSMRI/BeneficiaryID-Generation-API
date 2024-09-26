@@ -59,10 +59,12 @@ public class GenerateBeneficiaryController {
 	public String getBeneficiaryIDs(@Param("{\"benIDRequired\":\"Integer\",\"vanID\":\"Integer\"}") @RequestBody String request, HttpServletRequest httpRequest)
 	{
 		logger.info("generateBeneficiaryIDs request "+request.toString());
-			
 			M_BeneficiaryRegidMapping benMapping= InputMapper.gson().fromJson(request, M_BeneficiaryRegidMapping.class);
+			
 			List<M_BeneficiaryRegidMapping> list = generateBeneficiaryService.getBeneficiaryIDs(benMapping.getBenIDRequired(), benMapping.getVanID());
+			
 			String response = getSuccessResponseString(list, 200, "success", "generateBeneficiaryIDs");
+			
 			logger.info("generateBeneficiaryIDs response "+response.toString());
 		/**
 		 * sending the response...

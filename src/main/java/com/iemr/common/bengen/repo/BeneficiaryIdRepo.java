@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT ï¿½ Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -24,7 +24,6 @@ package com.iemr.common.bengen.repo;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Objects;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -64,8 +63,13 @@ public interface BeneficiaryIdRepo extends CrudRepository<BeneficiaryId, BigInte
 			  + " WHERE benregMap.provisioned =false and benregMap.reserved =false")
 		Long countBenID();
 
+//		@Query(nativeQuery = true, value = "Select benregMap.benRegId, benregMap.beneficiaryId, benregMap.CreatedDate "
+//				+ "from db_identity.m_beneficiaryregidmapping  benregMap "
+//				+ "where benregMap.provisioned =false and benregMap.reserved =true and benregMap.vanID=:vanID order by benregMap.benRegId desc limit :num ")
+//		List<Objects[]> getBenIDGenerated(@Param("vanID") Integer vanID, @Param("num") Long num);
+//		
 		@Query(nativeQuery = true, value = "Select benregMap.benRegId, benregMap.beneficiaryId, benregMap.CreatedDate "
 				+ "from db_identity.m_beneficiaryregidmapping  benregMap "
 				+ "where benregMap.provisioned =false and benregMap.reserved =true and benregMap.vanID=:vanID order by benregMap.benRegId desc limit :num ")
-		List<Objects[]> getBenIDGenerated(@Param("vanID") Integer vanID, @Param("num") Long num);
+		List<Object[]> getBenIDGenerated(@Param("vanID") Integer vanID, @Param("num") Long num);
 }
