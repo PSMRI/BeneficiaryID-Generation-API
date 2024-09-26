@@ -25,12 +25,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -174,7 +172,6 @@ public class GenerateBeneficiaryService  {
 		
 		jdbcTemplate.execute(sb.toString());
 		
-		//List<Objects[]> result=null;
 		List<Object[]> result=null;
 		
 		logger.info("ts result1 = " + ts );
