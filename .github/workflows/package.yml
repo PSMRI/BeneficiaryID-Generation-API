@@ -38,4 +38,4 @@ jobs:
       uses: actions/upload-artifact@v2 
       with:
         name: BeneficiaryID-Generation-API
-        path: target/bengenapi-v1.0.war
+        path: target/bengenapi-v3.0.0.war
