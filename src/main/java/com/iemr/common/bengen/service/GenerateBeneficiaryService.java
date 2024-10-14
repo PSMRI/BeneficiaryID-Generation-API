@@ -25,12 +25,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -53,6 +51,7 @@ public class GenerateBeneficiaryService  {
 	@Autowired
 	JdbcTemplate jdbcTemplate;
 	
+	@Autowired
 	BeneficiaryIdRepo beneficiaryIdRepo;
 
 	public void generateBeneficiaryIDs() throws Exception {
@@ -151,13 +150,11 @@ public class GenerateBeneficiaryService  {
 	{
 		logger.info("getBeneficiaryIDs start");
 		long strt = System.currentTimeMillis();
-		
 		Generator g = new Generator();	
 		StringBuffer sb = new StringBuffer("INSERT INTO `db_identity`.`m_beneficiaryregidmapping` (`BeneficiaryID`,`Provisioned`,`Deleted`,`Reserved`,`CreatedDate`,`CreatedBy`,`VanID`) VALUES ");
-		
 		Timestamp ts = Timestamp.from(Instant.now());
 		List<M_BeneficiaryRegidMapping> list = new ArrayList<M_BeneficiaryRegidMapping>();
-		
+	
 		for (int i=0; i < num; i++) {
 			sb.append("( ");
 			sb.append(g.generateBeneficiaryId()).append(",")
@@ -170,20 +167,26 @@ public class GenerateBeneficiaryService  {
 			sb.append(" ), ");
 			
 		}
-
+		
 		sb.deleteCharAt(sb.lastIndexOf(","));
 		
 		jdbcTemplate.execute(sb.toString());
 		
-		List<Objects[]> result=null;
+		List<Object[]> result=null;
+		
 		logger.info("ts result1 = " + ts );
+		
 		result = beneficiaryIdRepo.getBenIDGenerated(vanID, num);
+		
 		for (Object[] objects : result)
 		{
 			if (objects != null && objects.length > 0)
 			{
+				
 				list.add(new M_BeneficiaryRegidMapping(((Number) objects[0]).longValue(), ((Number) objects[1]).longValue(), (Timestamp) objects[2],"admin-batch"));
+				
 			}
+			
 			
 		}
 		long fin = System.currentTimeMillis() - strt;
