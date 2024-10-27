@@ -337,6 +337,11 @@ https://mvnrepository.com/artifact/io.lettuce/lettuce-core
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
+		<dependency> 
+			<groupId>co.elastic.logging</groupId> 
+			<artifactId>logback-ecs-encoder</artifactId> 
+			<version>0.4.0</version> 
+		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
