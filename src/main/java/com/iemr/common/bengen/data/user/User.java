@@ -19,5 +19,7 @@ public class User {
 
 	@Column(name = "userName")
 	private String userName;
+	@Column(name = "Deleted", insertable = false, updatable = true)
+	private Boolean deleted;
 
 }
