@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,8 @@ public class JwtAuthenticationUtil {
 	private CookieUtil cookieUtil;
 	@Autowired
 	private JwtUtil jwtUtil;
+	@Autowired
+	private RedisTemplate<String, Object> redisTemplate;
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
 	@Autowired
@@ -70,8 +73,8 @@ public class JwtAuthenticationUtil {
 
 			String userId = claims.get("userId", String.class);
 
-			// Fetch user based on userId from the database or cache
-			User user = generateBeneficiaryService.getUserById(Long.parseLong(userId));
+			// Check if user data is present in Redis
+			User user = getUserFromCache(userId);
 			if (user == null) {
 				throw new Exception("Invalid User ID.");
 			}
@@ -81,5 +84,18 @@ public class JwtAuthenticationUtil {
 			logger.error("Validation failed: " + e.getMessage(), e);
 			throw new Exception("Validation error: " + e.getMessage(), e);
 		}
+	}
+
+	private User getUserFromCache(String userId) {
+		String redisKey = "user_" + userId; // The Redis key format
+		User user = (User) redisTemplate.opsForValue().get(redisKey);
+
+		if (user == null) {
+			logger.warn("User not found in Redis. Will try to fetch from DB.");
+		} else {
+			logger.info("User fetched successfully from Redis.");
+		}
+
+		return user; // Returns null if not found
 	}
 }

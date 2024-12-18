@@ -41,7 +41,6 @@ import org.springframework.stereotype.Service;
 import com.iemr.common.bengen.data.user.User;
 import com.iemr.common.bengen.domain.M_BeneficiaryRegidMapping;
 import com.iemr.common.bengen.repo.BeneficiaryIdRepo;
-import com.iemr.common.bengen.repo.UserRepository;
 import com.iemr.common.bengen.utils.Generator;
 import com.iemr.common.bengen.utils.config.ConfigProperties;
 
@@ -55,8 +54,6 @@ public class GenerateBeneficiaryService {
 
 	@Autowired
 	BeneficiaryIdRepo beneficiaryIdRepo;
-	@Autowired
-	UserRepository userRepository;
 
 	public void generateBeneficiaryIDs() throws Exception {
 		logger.info("BengenApplication.run start");
@@ -191,24 +188,6 @@ public class GenerateBeneficiaryService {
 
 		return list;
 
-	}
-
-	public User getUserById(Long userId) throws Exception {
-		try {
-			// Fetch user from custom repository by userId
-			User user = userRepository.findByUserID(userId);
-
-			// Check if user is found
-			if (user == null) {
-				throw new Exception("User not found with ID: " + userId);
-			}
-
-			return user;
-		} catch (Exception e) {
-			// Log and throw custom exception in case of errors
-			logger.error("Error fetching user with ID: " + userId, e);
-			throw new Exception("Error fetching user with ID: " + userId, e);
-		}
 	}
 
 }
