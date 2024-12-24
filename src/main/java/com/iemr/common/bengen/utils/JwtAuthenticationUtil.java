@@ -1,6 +1,7 @@
 package com.iemr.common.bengen.utils;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import com.iemr.common.bengen.data.user.User;
+import com.iemr.common.bengen.repo.UserLoginRepo;
 import com.iemr.common.bengen.service.GenerateBeneficiaryService;
 
 import io.jsonwebtoken.Claims;
@@ -25,6 +27,8 @@ public class JwtAuthenticationUtil {
 	private JwtUtil jwtUtil;
 	@Autowired
 	private RedisTemplate<String, Object> redisTemplate;
+	@Autowired
+	private UserLoginRepo userLoginRepo;
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
 	@Autowired
@@ -76,6 +80,10 @@ public class JwtAuthenticationUtil {
 			// Check if user data is present in Redis
 			User user = getUserFromCache(userId);
 			if (user == null) {
+				// If not in Redis, fetch from DB and cache the result
+				user = fetchUserFromDB(userId);
+			}
+			if (user == null) {
 				throw new Exception("Invalid User ID.");
 			}
 
@@ -97,5 +105,25 @@ public class JwtAuthenticationUtil {
 		}
 
 		return user; // Returns null if not found
+	}
+
+	private User fetchUserFromDB(String userId) {
+		// This method will only be called if the user is not found in Redis.
+		String redisKey = "user_" + userId; // Redis key format
+
+		// Fetch user from DB
+		User user = userLoginRepo.getUserByUserID(Long.parseLong(userId));
+
+		if (user != null) {
+			// Cache the user in Redis for future requests (cache for 30 minutes)
+			redisTemplate.opsForValue().set(redisKey, user, 30, TimeUnit.MINUTES);
+
+			// Log that the user has been stored in Redis
+			logger.info("User stored in Redis with key: " + redisKey);
+		} else {
+			logger.warn("User not found for userId: " + userId);
+		}
+
+		return user;
 	}
 }
