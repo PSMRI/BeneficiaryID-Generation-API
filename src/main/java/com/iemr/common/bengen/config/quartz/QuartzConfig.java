@@ -1,3 +1,4 @@
+
 /*
 * AMRIT � Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
@@ -19,6 +20,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see https://www.gnu.org/licenses/.
 */
+
 package com.iemr.common.bengen.config.quartz;
 
 import java.io.IOException;
