@@ -9,7 +9,7 @@
 	<version>0.0.1</version>
 	<packaging>war</packaging>
 
-	<name>bengen</name>
+	<name>BeneficiaryID-Generation-API</name>
 	<description>Beneficiary Id Generation</description>
 
 	<parent>
@@ -31,7 +31,7 @@
 
 		<maven.test.skip>true</maven.test.skip>
 		<final-name>bengenapi-v1.0</final-name>
-		<environment>dev</environment>
+		<environment>${ENV_VAR}</environment>
 		<target-properties>target/classes/application.properties</target-properties>
 		<source-properties>target/classes/bengen_${environment}.properties</source-properties>
 		<hostname-dev>10.208.122.38</hostname-dev>
@@ -64,24 +64,24 @@
 			<version>2.5.0-rc1</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.quartz-scheduler/quartz-jobs -->
-		<dependency>
-			<groupId>org.quartz-scheduler</groupId>
-			<artifactId>quartz-jobs</artifactId>
-			<version>2.5.0-rc1</version>
-		</dependency>
-
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			<version>3.2.2</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.apache.tomcat.embed</groupId>
 					<artifactId>tomcat-embed-websocket</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-web</artifactId>
+				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>6.1.12</version>
 		</dependency>
 
 		<dependency>
@@ -184,32 +184,19 @@
 		</dependency>
 
 
-		<!--https://mvnrepository.com/artifact/org.springframework.security/spring-security-config -->
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-config</artifactId>
-			<version>6.2.2</version>
-		</dependency>
-
-		<!--https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-			<version>3.2.2</version>
-		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<version>3.2.2</version>
+			<version>3.3.3</version>
 			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>com.jayway.jsonpath</groupId>
-					<artifactId>json-path</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.jayway.jsonpath/json-path -->
+		<dependency>
+			<groupId>com.jayway.jsonpath</groupId>
+			<artifactId>json-path</artifactId>
+			<version>2.9.0</version>
+		</dependency>
+
 
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -256,8 +243,7 @@
 		</dependency>
 
 
-		<!--
-		https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations -->
+		<!-- https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations -->
 		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
 			<artifactId>swagger-annotations</artifactId>
@@ -300,16 +286,14 @@
 			<version>3.2.2</version>
 		</dependency>
 
-		<!--
-		https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 			<version>3.2.2</version>
 		</dependency>
 
-		<!--
-		https://mvnrepository.com/artifact/org.springframework.session/spring-session-data-redis -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.session/spring-session-data-redis -->
 		<dependency>
 			<groupId>org.springframework.session</groupId>
 			<artifactId>spring-session-data-redis</artifactId>
@@ -317,18 +301,14 @@
 		</dependency>
 
 
-		<!--
-https://mvnrepository.com/artifact/io.lettuce/lettuce-core
--->
+		<!-- https://mvnrepository.com/artifact/io.lettuce/lettuce-core -->
 		<dependency>
 			<groupId>io.lettuce</groupId>
 			<artifactId>lettuce-core</artifactId>
 			<version>6.3.1.RELEASE</version>
 		</dependency>
 
-		<!--
-		https://mvnrepository.com/artifact/org.springframework.session/spring-session-core
--->
+		<!-- https://mvnrepository.com/artifact/org.springframework.session/spring-session-core -->
 		<dependency>
 			<groupId>org.springframework.session</groupId>
 			<artifactId>spring-session-core</artifactId>
@@ -344,6 +324,69 @@ https://mvnrepository.com/artifact/io.lettuce/lettuce-core
 			<artifactId>jakarta.xml.bind-api</artifactId>
 			<version>4.0.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>co.elastic.logging</groupId>
+			<artifactId>logback-ecs-encoder</artifactId>
+			<version>1.3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.12.6</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.12.6</version>
+			<scope>runtime</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.12.6</version>
+			<scope>runtime</scope>
+		</dependency>
+
 
 	</dependencies>
 
@@ -360,8 +403,17 @@ https://mvnrepository.com/artifact/io.lettuce/lettuce-core
 	</profiles>
 
 	<build>
-		<finalName>bengenapi-v1.0</finalName>
+		<finalName>bengenapi-v3.0.0</finalName>
 		<plugins>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>10.0.3</version>
+				<configuration>
+					<format>HTML</format>
+					<nvdApiServerId>nvd</nvdApiServerId>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -416,8 +468,7 @@ https://mvnrepository.com/artifact/io.lettuce/lettuce-core
 									${target-properties} and
 									${source-properties}
 								</echo>
-								<concat destfile="${target-properties}"
-									append="yes"
+								<concat destfile="${target-properties}" append="yes"
 									force="yes">
 									<fileset file="${source-properties}">
 									</fileset>
@@ -454,8 +505,36 @@ https://mvnrepository.com/artifact/io.lettuce/lettuce-core
 					</webResources>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.3.1</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.puppycrawl.tools</groupId>
+						<artifactId>checkstyle</artifactId>
+						<version>10.12.7</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<configLocation>checkstyle.xml</configLocation>
+					<encoding>UTF-8</encoding>
+					<consoleOutput>true</consoleOutput>
+					<failsOnError>true</failsOnError>
+					<linkXRef>false</linkXRef>
+				</configuration>
+				<executions>
+					<execution>
+						<id>validate</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
-	
+
 </project>

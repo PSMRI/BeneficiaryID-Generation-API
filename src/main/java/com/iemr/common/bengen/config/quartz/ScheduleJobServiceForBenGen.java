@@ -40,6 +40,7 @@ public class ScheduleJobServiceForBenGen implements Job
 {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
+	@Autowired
 	BeneficiaryIdRepo beneficiaryIdRepo;
 	
 	@Autowired
