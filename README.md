@@ -7,7 +7,8 @@ This service is used to generate unique beneficiary registration Id for new bene
 This microservice is built on Java, Spring boot framework and MySQL DB.
 
 ### Prerequisites 
-* JDK 1.8
+Find the detailed list of software dependencies [here] (https://piramal-swasthya.gitbook.io/amrit/developer-guide/development-environment-setup/software-dependencies) .
+* JDK 17 (LTS)
 * Maven
 * Wildfly (or any compatible app server)
 * Redis
