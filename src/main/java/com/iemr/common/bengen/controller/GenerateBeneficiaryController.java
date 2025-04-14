@@ -54,7 +54,7 @@ public class GenerateBeneficiaryController {
 	GenerateBeneficiaryService generateBeneficiaryService;
 	
 	@Operation(summary = "Generate beneficiary Ids")
-	@CrossOrigin()
+	
 	@PostMapping(value = "/generateBeneficiaryIDs", headers = "Authorization", produces = { "application/json" })
 	public String getBeneficiaryIDs(@Param("{\"benIDRequired\":\"Integer\",\"vanID\":\"Integer\"}")
 									@RequestBody String request,
