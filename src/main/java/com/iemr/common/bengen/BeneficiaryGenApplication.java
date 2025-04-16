@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
@@ -37,6 +38,7 @@ import com.iemr.common.bengen.data.user.User;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableJpaRepositories
 public class BeneficiaryGenApplication extends SpringBootServletInitializer {
 
 	public static void main(String[] args) {
