@@ -1,0 +1,4 @@
+#!/bin/sh
+# Temporarily skipping tests until test suite is set up
+echo "Skipping tests for now"
+exit 0
