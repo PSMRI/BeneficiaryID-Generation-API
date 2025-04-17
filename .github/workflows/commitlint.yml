@@ -18,4 +18,4 @@ jobs:
         run: npm ci
       - name: Check commit messages
         run: |
-          npx commitlint --from=HEAD~1
+          npx commitlint --from="${{ github.event.pull_request.base.sha }}" --to="${{ github.sha }}"
