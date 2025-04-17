@@ -3,6 +3,31 @@
 
 This service is used to generate unique beneficiary registration Id for new beneficiaries.
 
+## Commit Message Standards
+This project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification. Commit messages must follow this format:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Types
+- `feat`: A new feature
+- `fix`: A bug fix
+- `docs`: Documentation only changes
+- `style`: Changes that do not affect the meaning of the code
+- `refactor`: A code change that neither fixes a bug nor adds a feature
+- `perf`: A code change that improves performance
+- `test`: Adding missing tests or correcting existing tests
+
+### Tools
+- Commitlint: Enforces commit message format
+- Husky: Git hooks for pre-commit checks
+- Commitizen: Interactive commit message creation
+
 ## Building From Source
 This microservice is built on Java, Spring boot framework and MySQL DB.
 
@@ -37,5 +62,5 @@ If you encounter any issues, bugs, or have feature requests, please file them in
 
 ## Join Our Community
 
-We’d love to have you join our community discussions and get real-time support!  
+We'd love to have you join our community discussions and get real-time support!  
 Join our [Discord server](https://discord.gg/FVQWsf5ENS) to connect with contributors, ask questions, and stay updated.  

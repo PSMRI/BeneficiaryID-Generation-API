@@ -1,10 +1,5 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-# Run lint-staged
-npx --no-install lint-staged
-
 # Run tests if they exist
-if [ -f "package.json" ] && grep -q "\"test\":" package.json; then
-  npm test
-fi
+npm run test:ci
