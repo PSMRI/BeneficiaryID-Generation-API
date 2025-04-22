@@ -38,7 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import com.iemr.common.bengen.data.user.User;
 import com.iemr.common.bengen.domain.M_BeneficiaryRegidMapping;
 import com.iemr.common.bengen.repo.BeneficiaryIdRepo;
 import com.iemr.common.bengen.utils.Generator;

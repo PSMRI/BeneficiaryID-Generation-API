@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.handler.WebRequestHandlerInterceptorAdapter;
 
 import com.iemr.common.bengen.utils.response.OutputResponse;
 import com.iemr.common.bengen.utils.sessionobject.SessionObject;
