@@ -103,7 +103,9 @@ public class GenerateBeneficiaryService {
 
 		Generator g = new Generator();
 		StringBuffer sb = new StringBuffer(
-				"INSERT INTO `db_identity`.`m_beneficiaryregidmapping` (`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`,`CreatedBy`) VALUES ");
+				"INSERT INTO `db_identity`.`m_beneficiaryregidmapping` " +
+						"(`BeneficiaryID`,`Provisioned`,`Deleted`," +
+						"`CreatedDate`,`CreatedBy`) VALUES ");
 
 		// INSERT INTO `db_identity`.`m_beneficiaryregidmapping`
 		// (`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`,`CreatedBy`) VALUES
@@ -114,8 +116,17 @@ public class GenerateBeneficiaryService {
 
 		for (int i = 0; i < num; i++) {
 			sb.append("( ");
-			sb.append(g.generateBeneficiaryId()).append(",").append("b'0'").append(",").append("b'0'").append(",")
-					.append("'").append(ts).append("',").append("'admin-batch'").append("");
+			sb.append(g.generateBeneficiaryId())
+					.append(",")
+					.append("b'0'")
+					.append(",")
+					.append("b'0'")
+					.append(",")
+					.append("'")
+					.append(ts)
+					.append("',")
+					.append("'admin-batch'")
+					.append("");
 			sb.append(" ), ");
 		}
 
@@ -132,11 +143,17 @@ public class GenerateBeneficiaryService {
 	public void testLoopGenr() {
 		List<String> strList = new ArrayList<String>();
 		StringBuffer sb = new StringBuffer(
-				"INSERT INTO `db_identity`.`m_beneficiaryregidmapping` (`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`,`CreatedBy`) VALUES ");
+				"INSERT INTO `db_identity`.`m_beneficiaryregidmapping` " +
+						"(`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`," +
+						"`CreatedBy`) VALUES ");
 		Timestamp ts = Timestamp.from(Instant.now());
 		Generator g = new Generator();
-		sb.append("( ").append(g.generateBeneficiaryId()).append(",").append("N").append(",").append("0").append(",")
-				.append(ts).append(",").append("admin-batch").append(") ");
+		sb.append("( ")
+				.append(g.generateBeneficiaryId())
+				.append(",").append("N").append(",")
+				.append("0").append(",")
+				.append(ts).append(",")
+				.append("admin-batch").append(") ");
 
 		strList.add(sb.toString());
 	}
@@ -150,14 +167,18 @@ public class GenerateBeneficiaryService {
 		long strt = System.currentTimeMillis();
 		Generator g = new Generator();
 		StringBuffer sb = new StringBuffer(
-				"INSERT INTO `db_identity`.`m_beneficiaryregidmapping` (`BeneficiaryID`,`Provisioned`,`Deleted`,`Reserved`,`CreatedDate`,`CreatedBy`,`VanID`) VALUES ");
+				"INSERT INTO `db_identity`.`m_beneficiaryregidmapping` " +
+						"(`BeneficiaryID`,`Provisioned`,`Deleted`,`Reserved`," +
+						"`CreatedDate`,`CreatedBy`,`VanID`) VALUES ");
 		Timestamp ts = Timestamp.from(Instant.now());
 		List<M_BeneficiaryRegidMapping> list = new ArrayList<M_BeneficiaryRegidMapping>();
 
 		for (int i = 0; i < num; i++) {
 			sb.append("( ");
-			sb.append(g.generateBeneficiaryId()).append(",").append("b'0'").append(",").append("b'0'").append(",")
-					.append("b'1'").append(",").append("'").append(ts).append("',").append("'admin-batch'").append(",")
+			sb.append(g.generateBeneficiaryId()).append(",").append("b'0'")
+					.append(",").append("b'0'").append(",")
+					.append("b'1'").append(",").append("'")
+					.append(ts).append("',").append("'admin-batch'").append(",")
 					.append(vanID).append("");
 			sb.append(" ), ");
 
@@ -177,7 +198,8 @@ public class GenerateBeneficiaryService {
 			if (objects != null && objects.length > 0) {
 
 				list.add(new M_BeneficiaryRegidMapping(((Number) objects[0]).longValue(),
-						((Number) objects[1]).longValue(), (Timestamp) objects[2], "admin-batch"));
+						((Number) objects[1]).longValue(),
+						(Timestamp) objects[2], "admin-batch"));
 
 			}
 

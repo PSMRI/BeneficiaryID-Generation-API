@@ -59,9 +59,8 @@ public class HTTPRequestInterceptor implements HandlerInterceptor
 
 	@Override
 
-	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) throws Exception
-
-	{
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object)
+			throws Exception {
 		boolean status = true;
 		logger.debug("In preHandle we are Intercepting the Request");
 		String authorization = request.getHeader("Authorization");
@@ -119,44 +118,36 @@ public class HTTPRequestInterceptor implements HandlerInterceptor
 
 	}
 
-	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object object, ModelAndView model)
+	public void postHandle(
+			HttpServletRequest request,
+			HttpServletResponse response,
+			Object object,
+			ModelAndView model) throws Exception{
 
-			throws Exception
-
-	{
-
-		try
-
-		{
-
+		try{
 			logger.debug("In postHandle we are Intercepting the Request");
 
 			String authorization = request.getHeader("Authorization");
 
 			logger.debug("RequestURI::" + request.getRequestURI() + " || Authorization ::" + authorization);
 
-			if (authorization != null)
-
-			{
-
-				sessionObject.updateSessionObject(authorization, sessionObject.getSessionObject(authorization));
-
+			if (authorization != null){
+				sessionObject.updateSessionObject(
+						authorization,
+						sessionObject.getSessionObject(authorization));
 			}
 
-		} catch (Exception e)
-
-		{
-
+		} catch (Exception e){
 			logger.debug("postHandle failed with error " + e.getMessage());
-
 		}
 
 	}
 
 	@Override
-	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object object, Exception arg3)
-			throws Exception
-	{
+	public void afterCompletion(
+			HttpServletRequest request,
+			HttpServletResponse response,
+			Object object, Exception arg3) throws Exception{
 		logger.debug("In afterCompletion Request Completed");
 	}
 }

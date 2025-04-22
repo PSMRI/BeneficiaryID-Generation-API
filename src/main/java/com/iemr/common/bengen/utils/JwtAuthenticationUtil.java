@@ -52,7 +52,8 @@ public class JwtAuthenticationUtil {
 		// Validate the token
 		Claims claims = jwtUtil.validateToken(jwtToken);
 		if (claims == null) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error 401: Unauthorized - Invalid JWT Token!");
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body("Error 401: Unauthorized - Invalid JWT Token!");
 		}
 
 		// Extract username from token

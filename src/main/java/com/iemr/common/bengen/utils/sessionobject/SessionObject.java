@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT ï¿½ Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -70,7 +70,7 @@ public class SessionObject
 	}
 
 	private boolean extendExpirationTime;// =
-											// configProperties.getExtendExpiryTime();
+	// configProperties.getExtendExpiryTime();
 	private int sessionExpiryTime;// = configProperties.getSessionExpiryTime();
 
 	public String getSessionObject(String key) throws RedisSessionException

@@ -1,5 +1,5 @@
 /*
-* AMRIT – Accessible Medical Records via Integrated Technology
+* AMRIT ï¿½ Accessible Medical Records via Integrated Technology
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -86,9 +86,9 @@ public class InputMapper
 	/**
 	 * @param json
 	 * @throws IEMRException
-	 *             This function will check for the following things and throws login exception if any one fails 1. Get
-	 *             the session details from the redis 2. IP address in request and the logged in IP address should be
-	 *             same.
+	 *        This function will check for the following things and throws login exception if any one fails 1. Get
+	 *        the session details from the redis 2. IP address in request and the logged in IP address should be
+	 *        same.
 	 */
 	// private void valildate(String json) throws IEMRException
 	// {

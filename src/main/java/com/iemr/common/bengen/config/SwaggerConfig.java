@@ -43,9 +43,10 @@
 //	}
 //
 //	private ApiInfo metaData() {
-//		 ApiInfo apiInfo = new ApiInfo("BeneficiaryID-Generation API", "This service is used to generate unique beneficiary registration Id for new beneficiaries.",
-//               "1.0", "Terms of service", new Contact("AMRIT", "https://psmri.github.io/PSMRI/", "amrit@piramalswasthya.org"), "",
-//      "");
+//		 ApiInfo apiInfo = new ApiInfo("BeneficiaryID-Generation API",
+//		 "This service is used to generate unique beneficiary registration Id for new beneficiaries.",
+//       "1.0", "Terms of service", new Contact("AMRIT", "https://psmri.github.io/PSMRI/", "amrit@piramalswasthya.org"),
+//       "", "");
 //		return apiInfo;
 //	}
 //}

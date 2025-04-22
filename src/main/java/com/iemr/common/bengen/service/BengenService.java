@@ -83,7 +83,12 @@ public class BengenService {
 	}
 	
 	
-	public void encryption() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	public void encryption()
+			throws NoSuchAlgorithmException,
+			NoSuchPaddingException,
+			InvalidKeyException,
+			IllegalBlockSizeException,
+			BadPaddingException{
 		/**
 		 * SecretKey
 		 * Cipher
