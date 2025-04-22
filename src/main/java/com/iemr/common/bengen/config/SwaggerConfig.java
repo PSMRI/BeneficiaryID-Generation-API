@@ -1,5 +1,5 @@
 ///*
-//* AMRIT � Accessible Medical Records via Integrated Technology
+//* AMRIT - Accessible Medical Records via Integrated Technologies
 //* Integrated EHR (Electronic Health Records) Solution
 //*
 //* Copyright (C) "Piramal Swasthya Management and Research Institute"
