@@ -27,7 +27,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration;
 
 import com.iemr.common.bengen.utils.config.ConfigProperties;
 import com.iemr.common.bengen.utils.gateway.email.EmailService;

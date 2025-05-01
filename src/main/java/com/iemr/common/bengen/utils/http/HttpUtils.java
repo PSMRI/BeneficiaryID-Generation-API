@@ -101,7 +101,11 @@ public class HttpUtils {
 	public String post(String uri, String json) {
 		String body;
 		HttpEntity<String> requestEntity = new HttpEntity<String>(json, headers);
-		ResponseEntity<String> responseEntity = rest.exchange(uri, HttpMethod.POST, requestEntity, String.class);
+		ResponseEntity<String> responseEntity = rest.exchange(
+				uri, HttpMethod.POST,
+				requestEntity,
+				String.class
+		);
 		setStatus(responseEntity.getStatusCode());
 		body = responseEntity.getBody();
 		return body;
@@ -140,14 +144,14 @@ public class HttpUtils {
 			try {
 				FormDataMultiPart multiPart = new FormDataMultiPart();
 				FileInputStream is = new FileInputStream(data);
-				FormDataBodyPart filePart = new FormDataBodyPart("content", is,
-						MediaType.APPLICATION_OCTET_STREAM_TYPE);
+				FormDataBodyPart filePart = new FormDataBodyPart(
+				"content",
+				is,
+				MediaType.APPLICATION_OCTET_STREAM_TYPE);
 				multiPart.bodyPart(filePart);
 				multiPart.field("docPath", data);
 				headers.add("Content-Type", MediaType.APPLICATION_JSON);
-				requestEntity = new HttpEntity<FormDataMultiPart>(multiPart, headers);// new
-																						// HttpEntity<String>(multiPart,
-																						// headers);
+				requestEntity = new HttpEntity<FormDataMultiPart>(multiPart, headers);
 				responseEntity = rest.exchange(uri, HttpMethod.POST, requestEntity, String.class);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();

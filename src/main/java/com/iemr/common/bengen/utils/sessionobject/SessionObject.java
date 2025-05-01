@@ -70,7 +70,7 @@ public class SessionObject
 	}
 
 	private boolean extendExpirationTime;// =
-											// configProperties.getExtendExpiryTime();
+	// configProperties.getExtendExpiryTime();
 	private int sessionExpiryTime;// = configProperties.getSessionExpiryTime();
 
 	public String getSessionObject(String key) throws RedisSessionException

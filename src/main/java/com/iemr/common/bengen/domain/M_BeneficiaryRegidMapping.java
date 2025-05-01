@@ -65,8 +65,10 @@ public class M_BeneficiaryRegidMapping {
 	
 	@Override
 	public String toString() {
-
-		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setLongSerializationPolicy(LongSerializationPolicy.STRING).serializeNulls()
+		return new GsonBuilder()
+				.excludeFieldsWithoutExposeAnnotation()
+				.setLongSerializationPolicy(LongSerializationPolicy.STRING)
+				.serializeNulls()
 				.setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").create().toJson(this);
 	}
 
