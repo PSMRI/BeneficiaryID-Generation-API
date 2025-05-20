@@ -1,5 +1,5 @@
 /*
-* AMRIT � Accessible Medical Records via Integrated Technology
+* AMRIT - Accessible Medical Records via Integrated Technologies
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -56,12 +56,15 @@ public class GenerateBeneficiaryController {
 	@Operation(summary = "Generate beneficiary Ids")
 	@CrossOrigin()
 	@PostMapping(value = "/generateBeneficiaryIDs", headers = "Authorization", produces = { "application/json" })
-	public String getBeneficiaryIDs(@Param("{\"benIDRequired\":\"Integer\",\"vanID\":\"Integer\"}") @RequestBody String request, HttpServletRequest httpRequest)
-	{
+	public String getBeneficiaryIDs(@Param("{\"benIDRequired\":\"Integer\",\"vanID\":\"Integer\"}")
+									@RequestBody String request,
+									HttpServletRequest httpRequest){
 		
-			M_BeneficiaryRegidMapping benMapping= InputMapper.gson().fromJson(request, M_BeneficiaryRegidMapping.class);
+			M_BeneficiaryRegidMapping benMapping= InputMapper.gson().
+					fromJson(request, M_BeneficiaryRegidMapping.class);
 			
-			List<M_BeneficiaryRegidMapping> list = generateBeneficiaryService.getBeneficiaryIDs(benMapping.getBenIDRequired(), benMapping.getVanID());
+			List<M_BeneficiaryRegidMapping> list = generateBeneficiaryService
+					.getBeneficiaryIDs(benMapping.getBenIDRequired(), benMapping.getVanID());
 			
 			String response = getSuccessResponseString(list, 200, "success", "generateBeneficiaryIDs");
 			
@@ -72,9 +75,10 @@ public class GenerateBeneficiaryController {
 		return response;
 	}
 	
-	private String getSuccessResponseString(List<M_BeneficiaryRegidMapping> list, Integer statusCode, String statusMsg,
-			String methodName)
-	{
+	private String getSuccessResponseString(List<M_BeneficiaryRegidMapping> list,
+											Integer statusCode,
+											String statusMsg,
+											String methodName){
 		Type typeOfSrc = new TypeToken<List<M_BeneficiaryRegidMapping>>()
 			{
 				private static final long serialVersionUID = 1L;
@@ -84,7 +88,8 @@ public class GenerateBeneficiaryController {
 		logger.info("data.toStr: " + data.toString());
 		OutputResponse response = new OutputResponse.Builder().setDataJsonType("JsonObject.class")
 				.setStatusCode(statusCode).setStatusMessage(statusMsg)
-				.setDataObjectType(this.getClass().getSimpleName()).setMethodName(methodName).setData(data).build();
+				.setDataObjectType(this.getClass().getSimpleName())
+				.setMethodName(methodName).setData(data).build();
 		return response.toString();
 	}
 }

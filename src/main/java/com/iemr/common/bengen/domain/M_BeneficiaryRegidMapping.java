@@ -1,5 +1,5 @@
 /*
-* AMRIT � Accessible Medical Records via Integrated Technology
+* AMRIT - Accessible Medical Records via Integrated Technologies
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -65,8 +65,10 @@ public class M_BeneficiaryRegidMapping {
 	
 	@Override
 	public String toString() {
-
-		return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setLongSerializationPolicy(LongSerializationPolicy.STRING).serializeNulls()
+		return new GsonBuilder()
+				.excludeFieldsWithoutExposeAnnotation()
+				.setLongSerializationPolicy(LongSerializationPolicy.STRING)
+				.serializeNulls()
 				.setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").create().toJson(this);
 	}
 

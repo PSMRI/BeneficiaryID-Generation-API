@@ -69,7 +69,10 @@ public class JwtUserIdValidationFilter implements Filter {
 			// Determine which token (cookie or header) to validate
 			String jwtToken = jwtTokenFromCookie != null ? jwtTokenFromCookie : jwtTokenFromHeader;
 			if (jwtToken == null) {
-				response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT token not found in cookies or headers");
+				response.sendError(
+						HttpServletResponse.SC_UNAUTHORIZED,
+						"JWT token not found in cookies or headers"
+				);
 				return;
 			}
 
@@ -84,7 +87,10 @@ public class JwtUserIdValidationFilter implements Filter {
 			}
 		} catch (Exception e) {
 			logger.error("Authorization error: ", e);
-			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authorization error: " + e.getMessage());
+			response.sendError(
+					HttpServletResponse.SC_UNAUTHORIZED,
+					"Authorization error: " + e.getMessage()
+			);
 		}
 	}
 

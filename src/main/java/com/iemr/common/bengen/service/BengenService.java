@@ -1,5 +1,5 @@
 /*
-* AMRIT � Accessible Medical Records via Integrated Technology
+* AMRIT - Accessible Medical Records via Integrated Technologies
 * Integrated EHR (Electronic Health Records) Solution
 *
 * Copyright (C) "Piramal Swasthya Management and Research Institute"
@@ -83,7 +83,12 @@ public class BengenService {
 	}
 	
 	
-	public void encryption() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	public void encryption()
+			throws NoSuchAlgorithmException,
+			NoSuchPaddingException,
+			InvalidKeyException,
+			IllegalBlockSizeException,
+			BadPaddingException{
 		/**
 		 * SecretKey
 		 * Cipher

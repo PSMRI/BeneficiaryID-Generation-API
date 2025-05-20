@@ -5,8 +5,8 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.iemr.common</groupId>
-	<artifactId>bengen</artifactId>
-	<version>0.0.1</version>
+	<artifactId>bengen-api</artifactId>
+	<version>3.1.0</version>
 	<packaging>war</packaging>
 
 	<name>BeneficiaryID-Generation-API</name>
@@ -403,7 +403,7 @@
 	</profiles>
 
 	<build>
-		<finalName>bengenapi-v3.0.0</finalName>
+		<finalName>${artifactId}-${version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.owasp</groupId>

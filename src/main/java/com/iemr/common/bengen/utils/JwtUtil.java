@@ -34,8 +34,11 @@ public class JwtUtil {
 		Date expiryDate = new Date(now.getTime() + EXPIRATION_TIME);
 
 		// Include the userId in the JWT claims
-		return Jwts.builder().setSubject(username).claim("userId", userId) // Add userId as a claim
-				.setIssuedAt(now).setExpiration(expiryDate).signWith(getSigningKey(), SignatureAlgorithm.HS256)
+		return Jwts.builder().setSubject(username)
+				.claim("userId", userId) // Add userId as a claim
+				.setIssuedAt(now)
+				.setExpiration(expiryDate)
+				.signWith(getSigningKey(), SignatureAlgorithm.HS256)
 				.compact();
 	}
 
