@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,7 +41,6 @@ public class VersionController {
 	private Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
 	
 	@Operation(summary = "Version Information")
-	@CrossOrigin()
 	@GetMapping(value = "/version")
 	public String versionInformation() {
 		OutputResponse output = new OutputResponse();
