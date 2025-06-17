@@ -1,6 +1,7 @@
 package com.iemr.common.bengen.utils;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,14 +18,16 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@Component
 public class JwtUserIdValidationFilter implements Filter {
 
 	private final JwtAuthenticationUtil jwtAuthenticationUtil;
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+	private final String allowedOrigins;
 
-	public JwtUserIdValidationFilter(JwtAuthenticationUtil jwtAuthenticationUtil) {
+	public JwtUserIdValidationFilter(JwtAuthenticationUtil jwtAuthenticationUtil,
+			String allowedOrigins) {
 		this.jwtAuthenticationUtil = jwtAuthenticationUtil;
+		this.allowedOrigins = allowedOrigins;
 	}
 
 	@Override
@@ -33,8 +36,19 @@ public class JwtUserIdValidationFilter implements Filter {
 		HttpServletRequest request = (HttpServletRequest) servletRequest;
 		HttpServletResponse response = (HttpServletResponse) servletResponse;
 
+		String origin = request.getHeader("Origin");
+		if (origin != null && isOriginAllowed(origin)) {
+			response.setHeader("Access-Control-Allow-Origin", origin);
+			response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+			response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept, Jwttoken");
+			response.setHeader("Access-Control-Allow-Credentials", "true");
+		} else {
+			logger.warn("Origin [{}] is NOT allowed. CORS headers NOT added.", origin);
+		}
+
 		if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-			filterChain.doFilter(servletRequest, servletResponse); // allow it through
+			logger.info("OPTIONS request - skipping JWT validation");
+			response.setStatus(HttpServletResponse.SC_OK);
 			return;
 		}
 
@@ -113,6 +127,25 @@ public class JwtUserIdValidationFilter implements Filter {
 					HttpServletResponse.SC_UNAUTHORIZED,
 					"Authorization error: " + e.getMessage());
 		}
+	}
+
+	private boolean isOriginAllowed(String origin) {
+		if (origin == null || allowedOrigins == null || allowedOrigins.trim().isEmpty()) {
+			logger.warn("No allowed origins configured or origin is null");
+			return false;
+		}
+
+		return Arrays.stream(allowedOrigins.split(","))
+				.map(String::trim)
+				.anyMatch(pattern -> {
+					String regex = pattern
+							.replace(".", "\\.")
+							.replace("*", ".*")
+							.replace("http://localhost:.*", "http://localhost:\\d+"); // special case for wildcard port
+
+					boolean matched = origin.matches(regex);
+					return matched;
+				});
 	}
 
 	private boolean isMobileClient(String userAgent) {
