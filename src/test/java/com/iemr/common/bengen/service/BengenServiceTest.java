@@ -1,3 +1,5 @@
+package com.iemr.common.bengen.service;
+
 import com.iemr.common.bengen.service.BengenService;
 
 import io.jsonwebtoken.security.InvalidKeyException;

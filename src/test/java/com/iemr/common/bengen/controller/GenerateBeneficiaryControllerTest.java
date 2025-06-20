@@ -7,10 +7,9 @@ import com.google.gson.reflect.TypeToken;
 import com.iemr.common.bengen.domain.M_BeneficiaryRegidMapping;
 import com.iemr.common.bengen.service.GenerateBeneficiaryService;
 import com.iemr.common.bengen.utils.OutputResponse;
-import com.iemr.common.bengen.utils.mapper.InputMapper; // Assuming this is your DTO for the controller
+import com.iemr.common.bengen.utils.mapper.InputMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-// REMOVED: jakarta.validation.constraints.NotNull; // Not needed without @Valid in controller
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-// REMOVED: org.springframework.web.bind.MethodArgumentNotValidException; // Not needed without @Valid in controller
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -61,19 +59,16 @@ public class GenerateBeneficiaryControllerTest {
     private Gson outputMapperGson;
     private Gson inputMapperGson;
 
-
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        // --- Custom Exception Handling for MockMvc standalone setup ---
         List<HandlerExceptionResolver> exceptionResolvers = new ArrayList<>();
         exceptionResolvers.add(new CustomTestExceptionResolver());
 
         mockMvc = MockMvcBuilders.standaloneSetup(generateBeneficiaryController)
-                                 .setHandlerExceptionResolvers(exceptionResolvers)
-                                 .build();
-        // --- END OF CUSTOM EXCEPTION HANDLING SETUP ---
+                .setHandlerExceptionResolvers(exceptionResolvers)
+                .build();
 
         outputMapperGson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
@@ -89,11 +84,9 @@ public class GenerateBeneficiaryControllerTest {
     @Test
     @DisplayName("Should successfully generate beneficiary IDs with valid input")
     void getBeneficiaryIDs_success() throws Exception {
-        // Given
         Long benIDRequired = 2L;
         Integer vanID = 101;
         String createdBy = "test_user";
-
         Timestamp now = Timestamp.from(Instant.parse("2024-06-12T10:30:00.123Z"));
 
         String requestJson = inputMapperGson.toJson(new RequestInput(benIDRequired, vanID));
@@ -119,7 +112,6 @@ public class GenerateBeneficiaryControllerTest {
                 .build();
         String expectedResponseString = expectedOutputResponse.toString();
 
-        // When & Then
         mockMvc.perform(post("/generateBeneficiaryController/generateBeneficiaryIDs")
                         .header("Authorization", "Bearer dummy_token")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -131,7 +123,6 @@ public class GenerateBeneficiaryControllerTest {
     @Test
     @DisplayName("Should return empty list when service returns empty list")
     void getBeneficiaryIDs_emptyList() throws Exception {
-        // Given
         Long benIDRequired = 0L;
         Integer vanID = 101;
 
@@ -153,7 +144,6 @@ public class GenerateBeneficiaryControllerTest {
                 .build();
         String expectedResponseString = expectedOutputResponse.toString();
 
-        // When & Then
         mockMvc.perform(post("/generateBeneficiaryController/generateBeneficiaryIDs")
                         .header("Authorization", "Bearer dummy_token")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -165,10 +155,8 @@ public class GenerateBeneficiaryControllerTest {
     @Test
     @DisplayName("Should return 500 when malformed type input leads to service NullPointerException")
     void getBeneficiaryIDs_inputCausesServiceNullPointer() throws Exception {
-        // Given: Malformed JSON where "not_a_long" for a Long field will result in null being passed to service
         String malformedJson = "{ \"benIDRequired\": \"not_a_long\", \"vanID\": 101 }";
 
-        // Mock the service to throw NullPointerException when benIDRequired is null
         when(generateBeneficiaryService.getBeneficiaryIDs(isNull(), anyInt()))
                 .thenThrow(new NullPointerException("benIDRequired cannot be null in service (simulated)"));
 
@@ -176,17 +164,14 @@ public class GenerateBeneficiaryControllerTest {
                         .header("Authorization", "Bearer dummy_token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(malformedJson))
-                .andExpect(status().isInternalServerError()); // Expecting 500 now
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
     @DisplayName("Should return 500 when missing required input leads to service NullPointerException")
     void getBeneficiaryIDs_missingInputCausesServiceNullPointer() throws Exception {
-        // Given: JSON missing 'benIDRequired' entirely.
-        // This will result in benIDRequired being null passed to service.
         String missingFieldsJson = "{ \"vanID\": 101 }";
 
-        // Mock the service to throw NullPointerException when benIDRequired is null
         when(generateBeneficiaryService.getBeneficiaryIDs(isNull(), anyInt()))
                 .thenThrow(new NullPointerException("benIDRequired cannot be null in service (simulated)"));
 
@@ -194,14 +179,12 @@ public class GenerateBeneficiaryControllerTest {
                         .header("Authorization", "Bearer dummy_token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(missingFieldsJson))
-                .andExpect(status().isInternalServerError()); // Expecting 500 now
+                .andExpect(status().isInternalServerError());
     }
-
 
     @Test
     @DisplayName("Should handle service throwing a generic runtime exception (HTTP 500)")
     void getBeneficiaryIDs_serviceException() throws Exception {
-        // Given
         Long benIDRequired = 5L;
         Integer vanID = 101;
 
@@ -217,10 +200,6 @@ public class GenerateBeneficiaryControllerTest {
                 .andExpect(status().isInternalServerError());
     }
 
-    /**
-     * Helper class to represent the input JSON structure for the request.
-     * No @NotNull here, as controller won't validate without @Valid.
-     */
     private static class RequestInput {
         private Long benIDRequired;
         private Integer vanID;
@@ -230,7 +209,6 @@ public class GenerateBeneficiaryControllerTest {
             this.vanID = vanID;
         }
 
-        // Add standard getters and setters for Spring to bind correctly
         public Long getBenIDRequired() {
             return benIDRequired;
         }
@@ -249,9 +227,7 @@ public class GenerateBeneficiaryControllerTest {
     }
 
     /**
-     * Custom Test Exception Resolver for MockMvc standalone setup.
-     * This directly maps specific exceptions to HTTP status codes.
-     * It handles HttpMessageNotReadableException and any RuntimeException (like NullPointerException from service).
+     * Minimal, silent exception resolver for unit test purposes.
      */
     static class CustomTestExceptionResolver implements HandlerExceptionResolver {
         @Override
@@ -261,29 +237,18 @@ public class GenerateBeneficiaryControllerTest {
                 @Nullable Object handler,
                 Exception ex) {
 
-            // Diagnostic print statements (can be removed once tests pass)
-            System.out.println("--- CustomTestExceptionResolver invoked ---");
-            System.out.println("Exception caught: " + ex.getClass().getName());
-            System.out.println("Exception message: " + ex.getMessage());
-
             if (ex instanceof HttpMessageNotReadableException) {
-                // This would catch truly malformed JSON syntax (e.g., missing comma, invalid characters)
-                System.out.println("Handling HttpMessageNotReadableException (400)");
                 response.setStatus(HttpStatus.BAD_REQUEST.value());
                 return new ModelAndView();
             } else if (ex instanceof RuntimeException) {
-                // Catches other RuntimeExceptions, including NullPointerException from service logic
-                System.out.println("Handling RuntimeException (500)");
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
                 return new ModelAndView();
             }
-            System.out.println("No specific handling for exception: " + ex.getClass().getName());
-            return null; // Let other resolvers or default behavior handle if not matched
+
+            return null; // Let other resolvers handle
         }
     }
 
-    // Keeping your original @ControllerAdvice class definition here for completeness,
-    // but it's not directly used by the MockMvc setup with the CustomTestExceptionResolver in place.
     @ControllerAdvice
     static class GlobalTestExceptionHandler {
         @ExceptionHandler(HttpMessageNotReadableException.class)
