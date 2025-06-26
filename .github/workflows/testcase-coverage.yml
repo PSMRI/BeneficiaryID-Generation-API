@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -24,13 +24,14 @@ jobs:
 
       - name: Build with Maven
         run: |
-          mvn clean install -Dmaven.test.failure.ignore=false
+          mvn clean verify -Dmaven.test.failure.ignore=false
 
       - name: Upload JaCoCo Report Artifact
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
           path: target/site/jacoco/jacoco.xml
+          if-no-files-found: warn
 
       - name: Compare JaCoCo Coverage
         uses: madrapps/jacoco-report@v1.7.2
