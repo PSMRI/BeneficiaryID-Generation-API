@@ -1,3 +1,24 @@
+/*
+* AMRIT - Accessible Medical Records via Integrated Technologies
+* Integrated EHR (Electronic Health Records) Solution
+*
+* Copyright (C) "Piramal Swasthya Management and Research Institute"
+*
+* This file is part of AMRIT.
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see https://www.gnu.org/licenses/.
+*/
 package com.iemr.common.bengen.utils.validator;
 
 import com.iemr.common.bengen.utils.config.ConfigProperties;
@@ -5,21 +26,21 @@ import com.iemr.common.bengen.utils.exception.IEMRException;
 import com.iemr.common.bengen.utils.redis.RedisSessionException;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach; // For clean up after each test
-import org.junit.jupiter.api.BeforeEach; // For setup before each test
-import org.junit.jupiter.api.DisplayName; // For descriptive test names
-import org.junit.jupiter.api.Test; // For marking test methods
-import org.junit.jupiter.api.extension.ExtendWith; // To integrate JUnit 5 with Mockito
-import org.mockito.InjectMocks; // To inject mocks into the class under test
-import org.mockito.Mock; // To create mock objects
-import org.mockito.MockedStatic; // To mock static methods
-import org.mockito.Mockito; // For Mockito static methods like mockStatic, when, verify
-import org.mockito.junit.jupiter.MockitoExtension; // Mockito extension for JUnit 5
-import org.springframework.test.util.ReflectionTestUtils; // For accessing private/static fields
-import com.iemr.common.bengen.utils.sessionobject.SessionObject; // Explicitly import SessionObject
+import org.junit.jupiter.api.AfterEach; 
+import org.junit.jupiter.api.BeforeEach; 
+import org.junit.jupiter.api.DisplayName; 
+import org.junit.jupiter.api.Test; 
+import org.junit.jupiter.api.extension.ExtendWith; 
+import org.mockito.InjectMocks;
+import org.mockito.Mock; 
+import org.mockito.MockedStatic; 
+import org.mockito.Mockito; 
+import org.mockito.junit.jupiter.MockitoExtension; 
+import org.springframework.test.util.ReflectionTestUtils; 
+import com.iemr.common.bengen.utils.sessionobject.SessionObject; 
 
-import static org.junit.jupiter.api.Assertions.*; // Static imports for assertion methods
-import static org.mockito.Mockito.*; // Static imports for Mockito methods
+import static org.junit.jupiter.api.Assertions.*; 
+import static org.mockito.Mockito.*; 
 
 /**
  * JUnit 5 test class for the {@link Validator} service.
