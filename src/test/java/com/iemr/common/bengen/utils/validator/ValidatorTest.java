@@ -464,10 +464,6 @@ class ValidatorTest {
         // Act
         JSONObject result = validator.updateCacheObj(responseObj, key, ipKey);
 
-        // Debug print the actual status of 'status' variable within Validator's updateCacheObj just before return
-        System.out.println("Actual result from mismatch IP test: " + result.toString());
-
-
         // Assert
         assertNotNull(result);
         assertEquals(key, result.getString("key"));
@@ -540,9 +536,6 @@ class ValidatorTest {
         // Act
         JSONObject result = validator.updateCacheObj(responseObj, key, ipKey);
 
-        // Debug print
-        System.out.println("Result from testUpdateCacheObj_jsonExceptionDuringGet_returnsOriginalResponseObj: " + result.toString());
-
         // Assert
         assertNotNull(result);
         // Corrected based on your provided debug output: `key` is NOT present, but `sessionStatus` IS.
@@ -582,9 +575,6 @@ class ValidatorTest {
 
         // Act
         JSONObject result = validator.updateCacheObj(responseObj, key, ipKey);
-
-        // Debug print
-        System.out.println("Result from testUpdateCacheObj_redisSessionExceptionDuringSet_returnsOriginalResponseObj: " + result.toString());
 
         // Assert
         assertNotNull(result);
@@ -628,9 +618,6 @@ class ValidatorTest {
 
         // Act
         JSONObject result = validator.updateCacheObj(responseObjSpy, key, ipKey);
-
-        // Debug print
-        System.out.println("Result from testUpdateCacheObj_jsonExceptionDuringPut_returnsOriginalResponseObj: " + result.toString());
 
         // Assert
         assertNotNull(result);

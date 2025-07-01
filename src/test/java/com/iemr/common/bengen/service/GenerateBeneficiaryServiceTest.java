@@ -123,7 +123,7 @@ class GenerateBeneficiaryServiceTest {
     }
 
     @Test
-    void testLoopGenr() {
+    void testLoopGenerator() {
         try (MockedConstruction<Generator> genMock = Mockito.mockConstruction(Generator.class,
                 (mock, ctx) -> when(mock.generateBeneficiaryId()).thenReturn(MOCKED_BENEFICIARY_ID))) {
             generateBeneficiaryService.testLoopGenr();
@@ -153,18 +153,46 @@ class GenerateBeneficiaryServiceTest {
     }
 
     @Test
-    void testCreateFile() {
-        // Just ensure createFile runs without throwing and invokes JDBC execution
-        try (MockedStatic<ConfigProperties> cfg = Mockito.mockStatic(ConfigProperties.class)) {
+    void testCreateFile() throws IOException {
+        // Create a temporary file that we can control and verify
+        File tempFile = File.createTempFile("test_bengen", ".csv");
+        tempFile.deleteOnExit(); // Clean up after test
+        
+        try (MockedStatic<ConfigProperties> cfg = Mockito.mockStatic(ConfigProperties.class);
+             MockedStatic<File> fileMock = Mockito.mockStatic(File.class)) {
+            
             cfg.when(() -> ConfigProperties.getInteger("no-of-benID-to-be-generate")).thenReturn(2);
+            
+            // Mock File.createTempFile to return our controlled temp file
+            fileMock.when(() -> File.createTempFile(anyString(), eq(".csv"))).thenReturn(tempFile);
+            
             // Stub out JDBC execute
             doNothing().when(jdbcTemplate).execute(anyString());
 
-            // Should not throw
+            // Execute the method
             assertDoesNotThrow(() -> generateBeneficiaryService.createFile());
 
             // Verify that the SQL was executed
-            verify(jdbcTemplate, atLeastOnce()).execute(anyString());
+            verify(jdbcTemplate, times(1)).execute(anyString());
+            
+            // Verify file was created and exists
+            assertTrue(tempFile.exists(), "Temporary file should exist");
+            assertTrue(tempFile.length() > 0, "File should not be empty");
+            
+            // Verify file content structure (more flexible than exact string match)
+            String fileContent = java.nio.file.Files.readString(tempFile.toPath());
+            assertTrue(fileContent.contains("INSERT INTO `db_identity`.`m_beneficiaryregidmapping`"), 
+                      "File should contain the INSERT statement");
+            assertTrue(fileContent.contains("BeneficiaryID"), 
+                      "File should contain BeneficiaryID column");
+            assertTrue(fileContent.contains("admin-batch"), 
+                      "File should contain admin-batch creator");
+            
+            // Count the number of value sets - should be 2 for our test
+            // The SQL contains "VALUES (" followed by value sets like "( <values> ), ( <values> )"
+            // So we count occurrences of "), (" which indicates multiple value sets
+            long valueSetCount = fileContent.split("\\), \\(").length;
+            assertEquals(2, valueSetCount, "Should contain 2 sets of values for 2 beneficiary IDs");
         }
     }
 }
