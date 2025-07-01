@@ -123,7 +123,7 @@ class GenerateBeneficiaryServiceTest {
     }
 
     @Test
-    void testLoopGenerator() {
+    void testLoopGenr() {
         try (MockedConstruction<Generator> genMock = Mockito.mockConstruction(Generator.class,
                 (mock, ctx) -> when(mock.generateBeneficiaryId()).thenReturn(MOCKED_BENEFICIARY_ID))) {
             generateBeneficiaryService.testLoopGenr();
