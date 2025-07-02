@@ -48,6 +48,7 @@ import static org.mockito.Mockito.*;
  * and JUnit 5 for testing.
  */
 @ExtendWith(MockitoExtension.class) // Integrates Mockito with JUnit 5
+@DisplayName("Validator Test Suite")
 class ValidatorTest {
 
     @Mock // Creates a mock instance of SessionObject

@@ -24,6 +24,7 @@ package com.iemr.common.bengen.config.quartz;
 import com.iemr.common.bengen.repo.BeneficiaryIdRepo;
 import com.iemr.common.bengen.service.GenerateBeneficiaryService;
 import com.iemr.common.bengen.utils.config.ConfigProperties;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("ScheduleJobServiceForBenGen Test Suite")
 class ScheduleJobServiceForBenGenTest {
 
     @Mock
@@ -53,6 +55,7 @@ class ScheduleJobServiceForBenGenTest {
     private ScheduleJobServiceForBenGen scheduleJobServiceForBenGen;
 
     @Test
+    @DisplayName("Should generate beneficiary IDs when total count is less than lower limit")
     void execute_WhenTotalBenIDIsLessThanLowerLimit_ShouldGenerateBeneficiaryIDs() throws Exception {
         Long totalBenID = 10L;
         Integer lowerLimitOfBen = 100;
@@ -71,6 +74,7 @@ class ScheduleJobServiceForBenGenTest {
     }
 
     @Test
+    @DisplayName("Should not generate beneficiary IDs when total count is greater than or equal to lower limit")
     void execute_WhenTotalBenIDIsGreaterThanOrEqualToLowerLimit_ShouldNotGenerateBeneficiaryIDs() throws Exception {
         Long totalBenID = 100L;
         Integer lowerLimitOfBen = 100;
@@ -89,6 +93,7 @@ class ScheduleJobServiceForBenGenTest {
     }
 
     @Test
+    @DisplayName("Should catch exception and not generate IDs when database error occurs during count")
     void execute_WhenExceptionOccursDuringCountBenID_ShouldCatchExceptionAndNotGenerateIDs() throws Exception {
         when(beneficiaryIdRepo.countBenID()).thenThrow(new RuntimeException("DB connection error"));
 
@@ -102,6 +107,7 @@ class ScheduleJobServiceForBenGenTest {
     }
 
     @Test
+    @DisplayName("Should catch exception when generation service fails")
     void execute_WhenExceptionOccursDuringGenerateBeneficiaryIDs_ShouldCatchException() throws Exception {
         Long totalBenID = 10L;
         Integer lowerLimitOfBen = 100;

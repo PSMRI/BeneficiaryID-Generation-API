@@ -21,6 +21,7 @@
 */
 package com.iemr.common.bengen.utils.mapper;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,6 +31,7 @@ import java.util.Date;
 
 import com.google.gson.JsonSyntaxException;
 
+@DisplayName("InputMapper Test Suite")
 class InputMapperTest {
 
     static class TestPojo {
@@ -43,6 +45,7 @@ class InputMapperTest {
     }
 
     @Test
+    @DisplayName("Should return valid InputMapper instance from gson factory method")
     void testGsonStaticFactoryMethod() {
         InputMapper mapper = InputMapper.gson();
         assertNotNull(mapper);
@@ -50,6 +53,7 @@ class InputMapperTest {
     }
 
     @Test
+    @DisplayName("Should successfully parse valid JSON to object")
     void testFromJson_validJson() {
         InputMapper mapper = InputMapper.gson();
         String json = "{\"name\":\"testName\", \"value\":100}";
@@ -63,6 +67,7 @@ class InputMapperTest {
     }
 
     @Test
+    @DisplayName("Should successfully parse JSON with date field")
     void testFromJson_validJsonWithDate() throws ParseException {
         InputMapper mapper = InputMapper.gson();
         String json = "{\"name\":\"itemWithDate\", \"value\":200, \"date\":\"2023-10-26T10:30:45.123\"}";
@@ -81,6 +86,7 @@ class InputMapperTest {
     }
 
     @Test
+    @DisplayName("Should return null when JSON input is null")
     void testFromJson_nullJson() {
         InputMapper mapper = InputMapper.gson();
         String json = null;
@@ -90,6 +96,7 @@ class InputMapperTest {
     }
 
     @Test
+    @DisplayName("Should return null when JSON input is empty string")
     void testFromJson_emptyJsonString() {
         InputMapper mapper = InputMapper.gson();
         String json = "";
@@ -101,6 +108,7 @@ class InputMapperTest {
     }
 
     @Test
+    @DisplayName("Should create object with default values when JSON is empty object")
     void testFromJson_emptyJsonObject() {
         InputMapper mapper = InputMapper.gson();
         String json = "{}";
@@ -114,6 +122,7 @@ class InputMapperTest {
     }
 
     @Test
+    @DisplayName("Should throw JsonSyntaxException when JSON is malformed")
     void testFromJson_malformedJson() {
         InputMapper mapper = InputMapper.gson();
         String json = "{\"name\":\"testName\", \"value\":,}";

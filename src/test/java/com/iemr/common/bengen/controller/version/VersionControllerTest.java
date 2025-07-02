@@ -44,6 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.iemr.common.bengen.utils.response.OutputResponse;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("VersionController Test Suite")
 class VersionControllerTest {
 
     private MockMvc mockMvc;

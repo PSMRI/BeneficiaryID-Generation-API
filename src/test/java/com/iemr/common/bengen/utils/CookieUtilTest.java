@@ -23,6 +23,7 @@ package com.iemr.common.bengen.utils;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.mock;
 
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("CookieUtil Test Suite")
 class CookieUtilTest {
 
     @Mock
@@ -47,6 +49,7 @@ class CookieUtilTest {
     CookieUtil cookieUtil;
 
     @Test
+    @DisplayName("Should return cookie value when cookie exists")
     void getCookieValue_cookieExists() {
         Cookie cookie = mock(Cookie.class);
         doReturn("myCookieName").when(cookie).getName();
@@ -60,6 +63,7 @@ class CookieUtilTest {
     }
 
     @Test
+    @DisplayName("Should return empty Optional when cookie does not exist")
     void getCookieValue_cookieDoesNotExist() {
         doReturn(new Cookie[0]).when(request).getCookies();
         Optional<String> result = cookieUtil.getCookieValue(request, "myCookieName");
@@ -67,6 +71,7 @@ class CookieUtilTest {
     }
 
     @Test
+    @DisplayName("Should return empty Optional when cookies array is null")
     void getCookieValue_cookiesIsNull() {
         doReturn(null).when(request).getCookies();
         Optional<String> result = cookieUtil.getCookieValue(request, "myCookieName");
@@ -75,6 +80,7 @@ class CookieUtilTest {
 
 
     @Test
+    @DisplayName("Should return JWT token when JWT cookie exists")
     void getJwtTokenFromCookie_jwtCookieExists() {
         Cookie jwtCookie = mock(Cookie.class);
         doReturn("Jwttoken").when(jwtCookie).getName();
@@ -87,6 +93,7 @@ class CookieUtilTest {
     }
 
     @Test
+    @DisplayName("Should return null when JWT cookie does not exist")
     void getJwtTokenFromCookie_jwtCookieDoesNotExist() {
         Cookie otherCookie = mock(Cookie.class);
         doReturn("otherCookie").when(otherCookie).getName();
@@ -99,6 +106,7 @@ class CookieUtilTest {
     }
 
     @Test
+    @DisplayName("Should return null when cookies array is null for JWT token lookup")
     void getJwtTokenFromCookie_cookiesIsNull() {
         doReturn(null).when(request).getCookies();
         String jwtToken = CookieUtil.getJwtTokenFromCookie(request);
