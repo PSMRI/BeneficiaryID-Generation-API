@@ -44,7 +44,6 @@ class CookieUtilTest {
     HttpServletRequest request;
 
     @InjectMocks
-    @Spy
     CookieUtil cookieUtil;
 
     @Test
