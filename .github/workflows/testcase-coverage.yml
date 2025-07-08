@@ -9,19 +9,14 @@ on:
     branches:
       - master
       - develop
-    paths-ignore:
-      - '**'
 
 permissions:
   contents: read
   pull-requests: write
   issues: write
 
-
-
 jobs:
   build-and-test-pr:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
