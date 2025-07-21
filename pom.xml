@@ -6,7 +6,7 @@
 
 	<groupId>com.iemr.common</groupId>
 	<artifactId>bengen-api</artifactId>
-	<version>3.1.0</version>
+	<version>3.4.0</version>
 	<packaging>war</packaging>
 
 	<name>BeneficiaryID-Generation-API</name>
@@ -92,7 +92,7 @@
 		<dependency>
 			<groupId>jakarta.persistence</groupId>
 			<artifactId>jakarta.persistence-api</artifactId>
-			<version>3.1.0</version>
+			<version>3.4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -226,7 +226,7 @@
 		<dependency>
 			<groupId>jakarta.ws.rs</groupId>
 			<artifactId>jakarta.ws.rs-api</artifactId>
-			<version>3.1.0</version>
+			<version>3.4.0</version>
 		</dependency>
 
 		<dependency>
