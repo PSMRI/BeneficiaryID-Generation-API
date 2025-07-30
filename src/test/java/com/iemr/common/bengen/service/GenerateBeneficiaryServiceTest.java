@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+//@ExtendWith(MockitoExtension.class)
 @DisplayName("GenerateBeneficiaryService Test Suite")
 class GenerateBeneficiaryServiceTest {
 
@@ -91,9 +91,6 @@ class GenerateBeneficiaryServiceTest {
             // Arrange
             int recordCount = 3;
 
-            // Act
-            //StringBuffer result = generateBeneficiaryService.createQuery(recordCount);
-
             // Assert
             ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
             verify(jdbcTemplate, times(1)).execute(sqlCaptor.capture());
@@ -117,6 +114,9 @@ class GenerateBeneficiaryServiceTest {
         @ValueSource(ints = {1, 2, 5, 10})
         @DisplayName("Should handle various record counts correctly")
         void createQuery_variousRecordCounts_shouldGenerateCorrectSQL(int recordCount) {
+            // Act
+            //generateBeneficiaryService.createQuery(recordCount);
+
             // Assert
             ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
             verify(jdbcTemplate).execute(sqlCaptor.capture());
@@ -129,6 +129,7 @@ class GenerateBeneficiaryServiceTest {
                 .containsIgnoringCase("INSERT INTO")
                 .containsIgnoringCase("VALUES");
         }
+
     }
 
     @Nested
