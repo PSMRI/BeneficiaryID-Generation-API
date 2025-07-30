@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,7 +53,6 @@ public class GenerateBeneficiaryController {
 	GenerateBeneficiaryService generateBeneficiaryService;
 	
 	@Operation(summary = "Generate beneficiary Ids")
-	@CrossOrigin()
 	@PostMapping(value = "/generateBeneficiaryIDs", headers = "Authorization", produces = { "application/json" })
 	public String getBeneficiaryIDs(@Param("{\"benIDRequired\":\"Integer\",\"vanID\":\"Integer\"}")
 									@RequestBody String request,
