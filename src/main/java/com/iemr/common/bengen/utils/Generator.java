@@ -22,6 +22,7 @@
 package com.iemr.common.bengen.utils;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
@@ -96,11 +97,19 @@ public class Generator {
     }
 
     private int getRandomDigit() {
-        return ThreadLocalRandom.current().nextInt(10);
+        SecureRandom secureRandom = new SecureRandom();
+        return secureRandom.nextInt(10);
+
     }
 
     private int getRandomInRange(int min, int max) {
-        return ThreadLocalRandom.current().nextInt(min, max + 1);
+    	if (min > max) {
+    	    throw new IllegalArgumentException("min must be <= max");
+    	}
+    	if (max == Integer.MAX_VALUE) {
+    	    return ThreadLocalRandom.current().nextInt(min, max); // inclusive min, exclusive max
+    	}
+    	return ThreadLocalRandom.current().nextInt(min, max + 1); // safe here
     }
 
     // Optional: only if you need debugging arrays
