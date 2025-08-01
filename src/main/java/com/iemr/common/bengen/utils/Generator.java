@@ -103,13 +103,14 @@ public class Generator {
     }
 
     private int getRandomInRange(int min, int max) {
+    	SecureRandom sr = new SecureRandom();
     	if (min > max) {
     	    throw new IllegalArgumentException("min must be <= max");
     	}
     	if (max == Integer.MAX_VALUE) {
-    	    return ThreadLocalRandom.current().nextInt(min, max); // inclusive min, exclusive max
+    	    return sr.nextInt(max - min) + min;
     	}
-    	return ThreadLocalRandom.current().nextInt(min, max + 1); // safe here
+    	return sr.nextInt(min, max + 1); // safe here
     }
 
     // Optional: only if you need debugging arrays
