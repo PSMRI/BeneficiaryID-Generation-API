@@ -49,7 +49,7 @@ import com.iemr.common.bengen.utils.config.ConfigProperties;
 public class GenerateBeneficiaryService {
 	private static final Logger logger = LoggerFactory.getLogger(GenerateBeneficiaryService.class);
 	private ExecutorService executor = Executors.newCachedThreadPool();
-
+	private static final int BATCH_SIZE = 500;
 	@Autowired
 	JdbcTemplate jdbcTemplate;
 
@@ -82,7 +82,10 @@ public class GenerateBeneficiaryService {
 	                 "(`BeneficiaryID`, `Provisioned`, `Deleted`, `CreatedDate`, `CreatedBy`) " +
 	                 "VALUES (?, b'0', b'0', ?, ?)";
 
-	    jdbcTemplate.batchUpdate(sql, batchArgs);
+	    for (int i = 0; i < batchArgs.size(); i += BATCH_SIZE) {
+	        List<Object[]> batch = batchArgs.subList(i, Math.min(i + BATCH_SIZE, batchArgs.size()));
+	        jdbcTemplate.batchUpdate(sql, batch);
+	    }
 
 	    long fin = System.currentTimeMillis() - strt;
 	    logger.info("BengenApplication.createFile finish. time = " + fin + " ms.");
