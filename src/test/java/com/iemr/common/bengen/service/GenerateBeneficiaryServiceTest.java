@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,57 +86,60 @@ class GenerateBeneficiaryServiceTest {
     @DisplayName("SQL Query Generation Tests")
     class QueryGenerationTests {
 
-        @Test
-        @DisplayName("Should create valid SQL query with correct structure")
-        void createQuery_validInput_shouldGenerateCorrectSQL() {
-            // Arrange
-            int recordCount = 3;
+    	@Test
+    	@DisplayName("Should generate correct number of batch data entries")
+    	void createBatchData_validInput_shouldReturnCorrectList() {
+    	    // Arrange
+    	    int recordCount = 3;
 
-            // Act
-            List<Object[]> result = generateBeneficiaryService.createBatchData(recordCount);
+    	    // Act
+    	    List<Object[]> result = generateBeneficiaryService.createBatchData(recordCount);
 
-            // Assert
-            ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
-            verify(jdbcTemplate, times(1)).execute(sqlCaptor.capture());
-            
-            String executedSQL = sqlCaptor.getValue();
-            
-            assertThat(executedSQL)
-                .as("SQL should have correct structure")
-                .startsWith("INSERT INTO " + EXPECTED_TABLE_NAME)
-                .contains("BeneficiaryID")
-                .contains("VALUES");
-            
-            // Updated counting logic
-            long valueSetCount = countSQLValueSets(executedSQL);
-            assertThat(valueSetCount)
-                .as("Should contain at least %d value sets", recordCount)
-                .isGreaterThanOrEqualTo(recordCount);
-                
-            assertThat(result.toString())
-                .as("Returned buffer should match executed SQL")
-                .isEqualTo(executedSQL);
-        }
+    	    // Assert
+    	    assertThat(result)
+    	        .as("Should return a list with expected number of records")
+    	        .hasSize(recordCount);
 
-        @ParameterizedTest
-        @ValueSource(ints = {1, 2, 5, 10})
-        @DisplayName("Should handle various record counts correctly")
-        void createQuery_variousRecordCounts_shouldGenerateCorrectSQL(int recordCount) {
-            // Act
-            generateBeneficiaryService.createBatchData(recordCount);
+    	    for (Object[] row : result) {
+    	        assertThat(row)
+    	            .as("Each row should have 3 elements: BeneficiaryID, Timestamp, CreatedBy")
+    	            .hasSize(3);
 
-            // Assert
-            ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
-            verify(jdbcTemplate).execute(sqlCaptor.capture());
-            
-            String sql = sqlCaptor.getValue();
-            
-            // Verify SQL structure instead of exact count
-            assertThat(sql)
-                .as("SQL should contain INSERT statement")
-                .containsIgnoringCase("INSERT INTO")
-                .containsIgnoringCase("VALUES");
-        }
+    	        assertThat(row[0])
+    	            .as("Beneficiary ID should not be null")
+    	            .isNotNull();
+
+    	        assertThat(row[1])
+    	            .as("Timestamp should be a Timestamp object")
+    	            .isInstanceOf(Timestamp.class);
+
+    	        assertThat(row[2])
+    	            .as("CreatedBy should be 'admin-batch'")
+    	            .isEqualTo("admin-batch");
+    	    }
+    	}
+    	@ParameterizedTest
+    	@ValueSource(ints = {1, 2, 5, 10})
+    	@DisplayName("Should generate correct number of beneficiary ID data records")
+    	void createBatchData_shouldReturnExpectedSize(int recordCount) {
+    	    // Act
+    	    List<Object[]> result = generateBeneficiaryService.createBatchData(recordCount);
+
+    	    // Assert
+    	    assertThat(result)
+    	        .as("Result size should match record count")
+    	        .hasSize(recordCount);
+
+    	    for (Object[] row : result) {
+    	        assertThat(row)
+    	            .as("Each row should contain [BeneficiaryID, Timestamp, CreatedBy]")
+    	            .hasSize(3);
+    	        assertThat(row[0]).isNotNull(); // BeneficiaryID
+    	        assertThat(row[1]).isInstanceOf(Timestamp.class);
+    	        assertThat(row[2]).isEqualTo("admin-batch");
+    	    }
+    	}
+
 
         @Test
         @DisplayName("Should handle edge case of zero records")
@@ -252,33 +256,39 @@ class GenerateBeneficiaryServiceTest {
     @DisplayName("Async Execution Tests")
     class AsyncExecutionTests {
 
-        @Test
-        @DisplayName("Should submit task to executor service")
-        void generateBeneficiaryIDs_asyncExecution_shouldSubmitTask() throws Exception {
-            // Arrange
-            Runnable[] capturedTask = new Runnable[1];
-            doAnswer(invocation -> {
-                capturedTask[0] = invocation.getArgument(0);
-                return null;
-            }).when(mockExecutorService).submit(any(Runnable.class));
+    	@Test
+    	@DisplayName("Should submit task to executor service")
+    	void generateBeneficiaryIDs_asyncExecution_shouldSubmitTask() throws Exception {
+    	    // Arrange
+    	    Runnable[] capturedTask = new Runnable[1];
+    	    doAnswer(invocation -> {
+    	        capturedTask[0] = invocation.getArgument(0);
+    	        return null;
+    	    }).when(mockExecutorService).submit(any(Runnable.class));
 
-            try (MockedStatic<ConfigProperties> configMock = mockStatic(ConfigProperties.class)) {
-                configMock.when(() -> ConfigProperties.getInteger("no-of-benID-to-be-generate"))
-                         .thenReturn(1);
+    	    try (MockedStatic<ConfigProperties> configMock = mockStatic(ConfigProperties.class)) {
+    	        configMock.when(() -> ConfigProperties.getInteger("no-of-benID-to-be-generate"))
+    	                  .thenReturn(1);
 
-                // Act
-                generateBeneficiaryService.generateBeneficiaryIDs();
+    	        // Act
+    	        generateBeneficiaryService.generateBeneficiaryIDs();
 
-                // Assert
-                verify(mockExecutorService, times(1)).submit(any(Runnable.class));
-                
-                // Execute captured task and verify it works
-                if (capturedTask[0] != null) {
-                    assertDoesNotThrow(() -> capturedTask[0].run());
-                    verify(jdbcTemplate, atLeastOnce()).execute(anyString());
-                }
-            }
-        }
+    	        // Assert
+    	        verify(mockExecutorService, times(1)).submit(any(Runnable.class));
+
+    	        // Execute the captured task and verify DB interaction
+    	        if (capturedTask[0] != null) {
+    	            assertDoesNotThrow(() -> capturedTask[0].run());
+
+    	            // Verify batchUpdate was called with appropriate arguments
+    	            verify(jdbcTemplate, atLeastOnce()).batchUpdate(
+    	            	    eq("INSERT INTO `db_identity`.`m_beneficiaryregidmapping` (`BeneficiaryID`, `Provisioned`, `Deleted`, `CreatedDate`, `CreatedBy`) VALUES (?, b'0', b'0', ?, ?)"),
+    	            	    anyList()
+    	            	);
+    	        }
+    	    }
+    	}
+
 
         @Test
         @DisplayName("Should handle configuration retrieval gracefully")
@@ -299,46 +309,50 @@ class GenerateBeneficiaryServiceTest {
     @DisplayName("File Generation Tests")
     class FileGenerationTests {
 
-        @Test
-        @DisplayName("Should create file with correct SQL content")
-        @Timeout(5)
-        void createFile_normalOperation_shouldGenerateCorrectFile() throws IOException {
-            // Arrange
-            File tempFile = createTempTestFile();
-            
-            try (MockedStatic<ConfigProperties> configMock = mockStatic(ConfigProperties.class);
-                 MockedStatic<File> fileMock = mockStatic(File.class)) {
-                
-                setupFileCreationMocks(configMock, fileMock, tempFile, 2);
+    	@Test
+    	@DisplayName("Should batch insert beneficiary records using JDBC")
+    	void createFile_shouldCallBatchUpdateWithCorrectParams() {
+    	    try (MockedStatic<ConfigProperties> configMock = mockStatic(ConfigProperties.class)) {
+    	        // Arrange
+    	        configMock.when(() -> ConfigProperties.getInteger("no-of-benID-to-be-generate"))
+    	                  .thenReturn(5); // for example
+    	        when(jdbcTemplate.batchUpdate(anyString(), anyList())).thenReturn(new int[5]);
 
-                // Act
-                assertDoesNotThrow(() -> generateBeneficiaryService.createFile());
+    	        // Act & Assert
+    	        assertDoesNotThrow(() -> generateBeneficiaryService.createFile());
 
-                // Assert
-                verifyJdbcExecution();
-                verifyFileCreationAndContent(tempFile);
-            }
-        }
+    	        verify(jdbcTemplate, atLeastOnce()).batchUpdate(anyString(), anyList());
+    	    }
+    	}
 
-        @ParameterizedTest
-        @ValueSource(ints = {1, 3, 5, 10})
-        @DisplayName("Should handle various record counts in file generation")
-        void createFile_variousRecordCounts_shouldGenerateCorrectContent(int recordCount) throws IOException {
-            // Arrange
-            File tempFile = createTempTestFile();
-            
-            try (MockedStatic<ConfigProperties> configMock = mockStatic(ConfigProperties.class);
-                 MockedStatic<File> fileMock = mockStatic(File.class)) {
-                
-                setupFileCreationMocks(configMock, fileMock, tempFile, recordCount);
+    	@ParameterizedTest
+    	@ValueSource(ints = {1, 3, 5, 10})
+    	@DisplayName("Should handle various record counts in batch insert")
+    	void createFile_variousRecordCounts_shouldCallJdbcTemplate(int recordCount) {
+    	    try (MockedStatic<ConfigProperties> configMock = mockStatic(ConfigProperties.class)) {
+    	        // Arrange
+    	        configMock.when(() -> ConfigProperties.getInteger("no-of-benID-to-be-generate"))
+    	                  .thenReturn(recordCount);
 
-                // Act
-                assertDoesNotThrow(() -> generateBeneficiaryService.createFile());
+    	        when(jdbcTemplate.batchUpdate(anyString(), anyList()))
+    	            .thenReturn(new int[recordCount]);
 
-                // Assert
-                verifyFileCreationAndContent(tempFile);
-            }
-        }
+    	        // Act
+    	        assertDoesNotThrow(() -> generateBeneficiaryService.createFile());
+
+    	        // Assert
+    	        ArgumentCaptor<List<Object[]>> batchCaptor = ArgumentCaptor.forClass(List.class);
+    	        verify(jdbcTemplate, atLeastOnce()).batchUpdate(anyString(), batchCaptor.capture());
+
+    	        List<Object[]> allBatches = batchCaptor.getAllValues().stream()
+    	                .flatMap(List::stream)
+    	                .collect(Collectors.toList());
+
+    	        assertThat(allBatches)
+    	            .as("Should batch insert expected number of records")
+    	            .hasSize(recordCount);
+    	    }
+    	}
 
         @Test
         @DisplayName("Should handle file operations gracefully")
@@ -355,20 +369,15 @@ class GenerateBeneficiaryServiceTest {
 
         @Test
         @DisplayName("Should handle JDBC execution failure")
-        void createFile_jdbcFailure_shouldPropagateException() throws IOException {
-            // Arrange
-            File tempFile = createTempTestFile();
-            
-            try (MockedStatic<ConfigProperties> configMock = mockStatic(ConfigProperties.class);
-                 MockedStatic<File> fileMock = mockStatic(File.class)) {
-                
+        void createFile_jdbcFailure_shouldPropagateException() {
+            try (MockedStatic<ConfigProperties> configMock = mockStatic(ConfigProperties.class)) {
+                // Arrange
                 configMock.when(() -> ConfigProperties.getInteger("no-of-benID-to-be-generate"))
-                         .thenReturn(2);
-                fileMock.when(() -> File.createTempFile(anyString(), eq(".csv")))
-                        .thenReturn(tempFile);
-                
+                          .thenReturn(2);
+
+                // Simulate JDBC failure
                 doThrow(new RuntimeException("Database connection failed"))
-                    .when(jdbcTemplate).execute(anyString());
+                    .when(jdbcTemplate).batchUpdate(anyString(), anyList());
 
                 // Act & Assert
                 assertThatThrownBy(() -> generateBeneficiaryService.createFile())
@@ -409,8 +418,6 @@ class GenerateBeneficiaryServiceTest {
                      .thenReturn(recordCount);
             fileMock.when(() -> File.createTempFile(anyString(), eq(".csv")))
                     .thenReturn(tempFile);
-            // Only mock JDBC when we're not testing JDBC failure
-            doNothing().when(jdbcTemplate).execute(anyString());
         }
 
         private void verifyJdbcExecution() {
