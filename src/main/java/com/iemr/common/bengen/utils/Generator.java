@@ -38,6 +38,8 @@ public class Generator {
     private static final Logger log = LoggerFactory.getLogger(Generator.class);
     private static final BigInteger TEN = BigInteger.TEN;
     private static final BigInteger TEN_POW_10 = TEN.pow(10);
+    
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public BigInteger generateBeneficiaryId() {
         BigInteger bid1 = generateFirst();
@@ -68,27 +70,13 @@ public class Generator {
         return BigInteger.valueOf(digit).multiply(TEN_POW_10);
     }
 
-    protected BigInteger generateNumN(int n) {
-        int[] source = new int[n];
-        int[] target = new int[n];
-
-        for (int i = 0; i < n; i++) {
-            source[i] = getRandomDigit();
-        }
-
-        for (int i = 0, j = n - 1; i < n; i++, j--) {
-            int num = (j == 0) ? getRandomDigit() : getRandomDigit() % j;
-            target[j] = source[i];
-            source[i] = num;
-        }
-
-        StringBuilder sb = new StringBuilder(n);
-        for (int value : target) {
-            sb.append(value);
-        }
-
-        return new BigInteger(sb.toString());
-    }
+	protected BigInteger generateNumN(int n) {
+		StringBuilder sb = new StringBuilder(n);
+		for (int i = 0; i < n; i++) {
+			sb.append(getRandomDigit());
+		}
+		return new BigInteger(sb.toString());
+	}
 
     public int getDigitCount(BigInteger number) {
         double factor = Math.log10(2);
@@ -97,20 +85,18 @@ public class Generator {
     }
 
     private int getRandomDigit() {
-        SecureRandom secureRandom = new SecureRandom();
-        return secureRandom.nextInt(10);
+    	return SECURE_RANDOM.nextInt(10);
 
     }
 
     private int getRandomInRange(int min, int max) {
-    	SecureRandom sr = new SecureRandom();
     	if (min > max) {
     	    throw new IllegalArgumentException("min must be <= max");
     	}
     	if (max == Integer.MAX_VALUE) {
-    	    return sr.nextInt(max - min) + min;
+    		return SECURE_RANDOM.nextInt(max - min + 1) + min;
     	}
-    	return sr.nextInt(min, max + 1); // safe here
+    	return SECURE_RANDOM.nextInt(min, max + 1);
     }
 
     // Optional: only if you need debugging arrays
