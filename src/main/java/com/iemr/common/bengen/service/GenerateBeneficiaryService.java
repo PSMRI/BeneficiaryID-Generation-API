@@ -92,10 +92,7 @@ public class GenerateBeneficiaryService {
 		long strt = System.currentTimeMillis();
 
 		Integer count = ConfigProperties.getInteger("no-of-benID-to-be-generate");
-		if (count == null || count <= 0) {
-			logger.error("Invalid or missing configuration for no-of-benID-to-be-generate");
-			throw new IllegalStateException("Invalid beneficiary ID count configuration");
-		}
+		
 		List<Object[]> batchArgs = createBatchData(count);
 
 		// Batch insert using JdbcTemplate

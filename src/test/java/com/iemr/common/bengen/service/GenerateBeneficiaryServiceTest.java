@@ -343,7 +343,24 @@ class GenerateBeneficiaryServiceTest {
 						.hasMessage("Batch insert failed");
 			}
 		}
-		
+
+		@Test
+		@DisplayName("Should complete file creation within reasonable time")
+		void createFile_performance_shouldCompleteWithinTimeout() throws IOException {
+			// Arrange
+			File tempFile = createTempTestFile();
+
+			try (MockedStatic<ConfigProperties> configMock = mockStatic(ConfigProperties.class);
+					MockedStatic<File> fileMock = mockStatic(File.class)) {
+
+				setupFileCreationMocks(configMock, fileMock, tempFile, 50);
+
+				// Act & Assert
+				assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+					generateBeneficiaryService.createFile();
+				});
+			}
+		}
 
 		private File createTempTestFile() throws IOException {
 			File tempFile = Files.createTempFile(tempDir, "test_bengen", ".csv").toFile();
