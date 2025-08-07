@@ -22,6 +22,9 @@
 package com.iemr.common.bengen.utils;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,125 +34,84 @@ import org.slf4j.LoggerFactory;
 * @author Sunil.K.Sundaram
 */
 public class Generator {
-	
-	private static final Logger log = LoggerFactory.getLogger(Generator.class);
 
-	public BigInteger generateBeneficiaryId(){
-		BigInteger bid1 = generateFirst();
-		BigInteger bid2 = generateNumN(10);
-		if (log.isDebugEnabled()){
-			log.debug("bid1: "+bid1+" length: "+getDigitCount(bid1));
-			log.debug("bid2: "+bid2+" length: "+getDigitCount(bid2));
+    private static final Logger log = LoggerFactory.getLogger(Generator.class);
+    private static final BigInteger TEN = BigInteger.TEN;
+    private static final BigInteger TEN_POW_10 = TEN.pow(10);
+    
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    public BigInteger generateBeneficiaryId() {
+        BigInteger bid1 = generateFirst();
+        BigInteger bid2 = generateNumN(10);
+
+        if (log.isDebugEnabled()) {
+            log.debug("bid1: {} length: {}", bid1, getDigitCount(bid1));
+            log.debug("bid2: {} length: {}", bid2, getDigitCount(bid2));
+        }
+
+        BigInteger bid = bid1.add(bid2).multiply(TEN);
+        String checksum = Verhoeff.generateVerhoeff(bid.toString());
+
+        if (log.isDebugEnabled()) {
+            log.debug("bid: {} length: {} chsum: {}", bid, getDigitCount(bid), checksum);
+        }
+
+        bid = bid.add(new BigInteger(checksum));
+        if (log.isDebugEnabled()) {
+            log.debug("BENEFICIARY ID: {}", bid);
+        }
+
+        return bid;
+    }
+
+    public BigInteger generateFirst() {
+        int digit = getRandomInRange(2, 9);
+        return BigInteger.valueOf(digit).multiply(TEN_POW_10);
+    }
+
+	protected BigInteger generateNumN(int n) {
+		StringBuilder sb = new StringBuilder(n);
+		for (int i = 0; i < n; i++) {
+			sb.append(getRandomDigit());
 		}
-		
-		BigInteger bid = bid1.add(bid2).multiply(new BigInteger("10"));
-		String chsum = Verhoeff.generateVerhoeff(bid.toString());
-		if (log.isDebugEnabled()){
-			log.debug("bid:  "+bid+" length: "+getDigitCount(bid)+" chsum: " + chsum);
-		}
-		
-		bid = bid.add(new BigInteger(chsum));
-		if (log.isDebugEnabled()){
-			log.debug("BENEFICIARY ID: " + bid /*+ ": Length: " + getDigitCount(bid)*/);
-		}
-		return bid;
-	}
-	
-	public BigInteger generateFirst(){
-		int one = getRandomNumRadRange(2, 9);
-		
-		BigInteger bn = new BigInteger(""+one).multiply(new BigInteger("10").pow(10));
-		return bn;
-	}
-
-	protected BigInteger generateNumN(int n){
-		int myArr1[] = new int[n];
-		int myArr2[] = new int[n];
-
-		for(int i=0;i<=n-1;i++){
-			myArr1[i] = getRandomNum();
-		}
-
-		int count = n-1;
-		for(int i=0; i <= myArr1.length-1 ; i++){
-			int num;
-			if(count == 0){
-				num = getRandomNum();
-			} else {
-				num = getRandomNumRad(count);
-			}
-			
-			int tmp = num;
-			myArr2[count] = myArr1[i];
-			myArr1[i] = tmp;
-			count--;
-		}
-
-		StringBuilder str = new StringBuilder();
-		for(int i=0;i<myArr2.length;i++){
-			str.append(myArr2[i]);
-		}
-
-		BigInteger bn = new BigInteger(str.toString());
-
-		return bn;
+		return new BigInteger(sb.toString());
 	}
 
-	public int getDigitCount(BigInteger number) {
-		double factor = Math.log(2) / Math.log(10);
-		final int digitCount = (int) (factor * number.bitLength() + 1);
-		if (BigInteger.TEN.pow(digitCount - 1).compareTo(number) > 0) {
-			return digitCount - 1;
-		}
-		return digitCount;
-	}
-	
-	public int getRandomNum(){
-		int num = (int) (Math.random() * 100 % 10);
-		if (log.isDebugEnabled()){
-			log.debug("Rand generated: " + num);
-		}
-		return num;
-	}
+    public int getDigitCount(BigInteger number) {
+        double factor = Math.log10(2);
+        int digits = (int) (factor * number.bitLength() + 1);
+        return (TEN.pow(digits - 1).compareTo(number) > 0) ? digits - 1 : digits;
+    }
 
-	public int getRandomNumRad(int rad){
-		int num = getRandomNum();
-		num = num % rad;
-		if (log.isDebugEnabled()){
-			log.debug("Rand generated ("+ rad + "): " + num);
-		}
-		return num;
-	}
+    private int getRandomDigit() {
+    	return SECURE_RANDOM.nextInt(10);
 
-	public int getRandomNumRadRange(int rad1, int rad2){
-		int num = getRandomNum();
-		if(num >= rad1 && num <= rad2){
-			return num;
-		} else {
-			num = getRandomNumRadRange(rad1, rad2);
-		}
+    }
 
-		if (log.isDebugEnabled()){
-			log.debug("Rand range generated: " + num);
+    private int getRandomInRange(int min, int max) {
+    	if (min > max) {
+    	    throw new IllegalArgumentException("min must be <= max");
+    	}
+		if (max == Integer.MAX_VALUE || (long) max - min + 1 > Integer.MAX_VALUE) {
+			return SECURE_RANDOM.nextInt(min, max + 1);
 		}
-		return num;
-	}
+    	return SECURE_RANDOM.nextInt(min, max + 1);
+    }
 
-	public void displayArrays(int[] myArr, int[] myArr2){
-		StringBuilder str = new StringBuilder();
-		for(int i=0;i<myArr.length;i++){
-			str.append(myArr[i]);
-		}
-		if (log.isDebugEnabled()){
-			log.debug("myarr : " + str);
-		}
+    // Optional: only if you need debugging arrays
+    public void displayArrays(int[] arr1, int[] arr2) {
+        if (!log.isDebugEnabled()) return;
 
-		str = new StringBuilder();
-		for(int i=0;i<myArr2.length;i++){
-			str.append(myArr2[i]);
-		}
-		if (log.isDebugEnabled()){
-			log.debug("myarr2: " + str);
-		}
-	}
+        log.debug("myarr  : {}", intArrayToString(arr1));
+        log.debug("myarr2 : {}", intArrayToString(arr2));
+    }
+
+    private String intArrayToString(int[] array) {
+        StringBuilder sb = new StringBuilder(array.length);
+        for (int value : array) {
+            sb.append(value);
+        }
+        return sb.toString();
+    }
 }
