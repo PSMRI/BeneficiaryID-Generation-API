@@ -21,10 +21,6 @@
 */
 package com.iemr.common.bengen.service;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -54,6 +50,7 @@ public class GenerateBeneficiaryService {
 	private static final Logger logger = LoggerFactory.getLogger(GenerateBeneficiaryService.class);
 	private ExecutorService executor = Executors.newCachedThreadPool();
 	private static final int BATCH_SIZE = 500;
+	private static final String ADMIN_BATCH = "admin-batch";
 	@Autowired
 	JdbcTemplate jdbcTemplate;
 
@@ -127,7 +124,7 @@ public class GenerateBeneficiaryService {
 	        .mapToObj(i -> new Object[]{
 	            g.generateBeneficiaryId(), // Assuming it's thread-safe
 	            ts,
-	            "admin-batch"
+	            ADMIN_BATCH
 	        })
 	        .collect(Collectors.toList());
 
