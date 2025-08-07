@@ -354,7 +354,7 @@ class GenerateBeneficiaryServiceTest {
 					MockedStatic<File> fileMock = mockStatic(File.class)) {
 
 				setupFileCreationMocks(configMock, fileMock, tempFile, 50);
-
+				configMock.when(()->ConfigProperties.getInteger("no-of-benID-to_be-generate")).thenReturn(5);
 				// Act & Assert
 				assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
 					generateBeneficiaryService.createFile();
