@@ -335,12 +335,12 @@ class GenerateBeneficiaryServiceTest {
 				configMock.when(() -> ConfigProperties.getInteger("no-of-benID-to-be-generate")).thenReturn(2);
 
 				// Simulate JDBC failure
-				doThrow(new RuntimeException("Database connection failed")).when(jdbcTemplate).batchUpdate(anyString(),
+				doThrow(new RuntimeException("Batch insert failed")).when(jdbcTemplate).batchUpdate(anyString(),
 						anyList());
 
 				// Act & Assert
 				assertThatThrownBy(() -> generateBeneficiaryService.createFile()).isInstanceOf(RuntimeException.class)
-						.hasMessage("Database connection failed");
+						.hasMessage("Batch insert failed");
 			}
 		}
 
