@@ -93,9 +93,9 @@ public class Generator {
     	if (min > max) {
     	    throw new IllegalArgumentException("min must be <= max");
     	}
-    	if (max == Integer.MAX_VALUE) {
-    		return SECURE_RANDOM.nextInt(max - min + 1) + min;
-    	}
+		if (max == Integer.MAX_VALUE || (long) max - min + 1 > Integer.MAX_VALUE) {
+			return SECURE_RANDOM.nextInt(min, max + 1);
+		}
     	return SECURE_RANDOM.nextInt(min, max + 1);
     }
 
