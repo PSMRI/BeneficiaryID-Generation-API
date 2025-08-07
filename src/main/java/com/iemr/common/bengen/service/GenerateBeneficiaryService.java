@@ -21,16 +21,13 @@
 */
 package com.iemr.common.bengen.service;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -45,17 +42,34 @@ import com.iemr.common.bengen.repo.BeneficiaryIdRepo;
 import com.iemr.common.bengen.utils.Generator;
 import com.iemr.common.bengen.utils.config.ConfigProperties;
 
+import jakarta.annotation.PreDestroy;
+import jakarta.transaction.Transactional;
+
 @Service
 public class GenerateBeneficiaryService {
 	private static final Logger logger = LoggerFactory.getLogger(GenerateBeneficiaryService.class);
 	private ExecutorService executor = Executors.newCachedThreadPool();
 	private static final int BATCH_SIZE = 500;
+	private static final String ADMIN_BATCH = "admin-batch";
 	@Autowired
 	JdbcTemplate jdbcTemplate;
 
 	@Autowired
 	BeneficiaryIdRepo beneficiaryIdRepo;
 
+	@PreDestroy
+	public void cleanup() {
+		logger.info("Shutting down executor service");
+		executor.shutdown();
+		try {
+			if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+				executor.shutdownNow();
+			}
+		} catch (InterruptedException e) {
+			executor.shutdownNow();
+			Thread.currentThread().interrupt();
+		}
+	}
 	public void generateBeneficiaryIDs() throws Exception {
 		logger.info("BengenApplication.run start");
 		long strt = System.currentTimeMillis();
@@ -69,26 +83,33 @@ public class GenerateBeneficiaryService {
 		long fin = System.currentTimeMillis() - strt;
 		logger.info("BengenApplication.run finish. time = " + fin + " ms.");
 	}
-
+	@Transactional
 	public void createFile() {
-	    logger.info("BengenApplication.createFile start");
-	    long strt = System.currentTimeMillis();
+		logger.info("BengenApplication.createFile start");
+		long strt = System.currentTimeMillis();
 
-	    Integer count = ConfigProperties.getInteger("no-of-benID-to-be-generate");
-	    List<Object[]> batchArgs = createBatchData(count);
+		Integer count = ConfigProperties.getInteger("no-of-benID-to-be-generate");
+		
+		List<Object[]> batchArgs = createBatchData(count);
 
-	    // Batch insert using JdbcTemplate
-	    String sql = "INSERT INTO `db_identity`.`m_beneficiaryregidmapping` " +
-	                 "(`BeneficiaryID`, `Provisioned`, `Deleted`, `CreatedDate`, `CreatedBy`) " +
-	                 "VALUES (?, b'0', b'0', ?, ?)";
+		// Batch insert using JdbcTemplate
+		String sql = "INSERT INTO `db_identity`.`m_beneficiaryregidmapping` "
+				+ "(`BeneficiaryID`, `Provisioned`, `Deleted`, `CreatedDate`, `CreatedBy`) "
+				+ "VALUES (?, b'0', b'0', ?, ?)";
 
-	    for (int i = 0; i < batchArgs.size(); i += BATCH_SIZE) {
-	        List<Object[]> batch = batchArgs.subList(i, Math.min(i + BATCH_SIZE, batchArgs.size()));
-	        jdbcTemplate.batchUpdate(sql, batch);
-	    }
+		for (int i = 0; i < batchArgs.size(); i += BATCH_SIZE) {
+			List<Object[]> batch = batchArgs.subList(i, Math.min(i + BATCH_SIZE, batchArgs.size()));
+			try {
+				jdbcTemplate.batchUpdate(sql, batch);
+			} catch (Exception e) {
+				logger.error("Failed to insert batch starting at index {}: {}", i, e.getMessage());
+				throw new RuntimeException("Batch insert failed", e);
+			}
+		}
 
-	    long fin = System.currentTimeMillis() - strt;
-	    logger.info("BengenApplication.createFile finish. time = " + fin + " ms.");
+
+		long fin = System.currentTimeMillis() - strt;
+		logger.info("BengenApplication.createFile finish. time = " + fin + " ms.");
 	}
 
 	public List<Object[]> createBatchData(int num) {
@@ -103,7 +124,7 @@ public class GenerateBeneficiaryService {
 	        .mapToObj(i -> new Object[]{
 	            g.generateBeneficiaryId(), // Assuming it's thread-safe
 	            ts,
-	            "admin-batch"
+	            ADMIN_BATCH
 	        })
 	        .collect(Collectors.toList());
 
