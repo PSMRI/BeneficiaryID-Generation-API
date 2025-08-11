@@ -21,16 +21,15 @@
 */
 package com.iemr.common.bengen.service;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,17 +42,34 @@ import com.iemr.common.bengen.repo.BeneficiaryIdRepo;
 import com.iemr.common.bengen.utils.Generator;
 import com.iemr.common.bengen.utils.config.ConfigProperties;
 
+import jakarta.annotation.PreDestroy;
+import jakarta.transaction.Transactional;
+
 @Service
 public class GenerateBeneficiaryService {
 	private static final Logger logger = LoggerFactory.getLogger(GenerateBeneficiaryService.class);
 	private ExecutorService executor = Executors.newCachedThreadPool();
-
+	private static final int BATCH_SIZE = 500;
+	private static final String ADMIN_BATCH = "admin-batch";
 	@Autowired
 	JdbcTemplate jdbcTemplate;
 
 	@Autowired
 	BeneficiaryIdRepo beneficiaryIdRepo;
 
+	@PreDestroy
+	public void cleanup() {
+		logger.info("Shutting down executor service");
+		executor.shutdown();
+		try {
+			if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+				executor.shutdownNow();
+			}
+		} catch (InterruptedException e) {
+			executor.shutdownNow();
+			Thread.currentThread().interrupt();
+		}
+	}
 	public void generateBeneficiaryIDs() throws Exception {
 		logger.info("BengenApplication.run start");
 		long strt = System.currentTimeMillis();
@@ -64,80 +80,57 @@ public class GenerateBeneficiaryService {
 			createFile();
 		});
 
-		/*
-		 * executor.submit(() -> { logger.info("Running: " +
-		 * Thread.currentThread().getName()); createFile(); });
-		 * 
-		 * executor.submit(() -> { logger.info("Running: " +
-		 * Thread.currentThread().getName()); createFile(); });
-		 */
-		// }
-
 		long fin = System.currentTimeMillis() - strt;
 		logger.info("BengenApplication.run finish. time = " + fin + " ms.");
 	}
-
+	@Transactional
 	public void createFile() {
 		logger.info("BengenApplication.createFile start");
 		long strt = System.currentTimeMillis();
 
-		try {
-			File file = File.createTempFile("" + System.currentTimeMillis(), ".csv");
-			logger.info("File: " + file.getAbsolutePath());
-			FileWriter fw = new FileWriter(file);
-			BufferedWriter bw = new BufferedWriter(fw);
-			Integer bentobeGenerate = ConfigProperties.getInteger("no-of-benID-to-be-generate");
-			bw.write(createQuery(bentobeGenerate).toString());
-			bw.flush();
-			bw.close();
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
+		Integer count = ConfigProperties.getInteger("no-of-benID-to-be-generate");
+		
+		List<Object[]> batchArgs = createBatchData(count);
+
+		// Batch insert using JdbcTemplate
+		String sql = "INSERT INTO `db_identity`.`m_beneficiaryregidmapping` "
+				+ "(`BeneficiaryID`, `Provisioned`, `Deleted`, `CreatedDate`, `CreatedBy`) "
+				+ "VALUES (?, b'0', b'0', ?, ?)";
+
+		for (int i = 0; i < batchArgs.size(); i += BATCH_SIZE) {
+			List<Object[]> batch = batchArgs.subList(i, Math.min(i + BATCH_SIZE, batchArgs.size()));
+			try {
+				jdbcTemplate.batchUpdate(sql, batch);
+			} catch (Exception e) {
+				logger.error("Failed to insert batch starting at index {}: {}", i, e.getMessage());
+				throw new RuntimeException("Batch insert failed", e);
+			}
 		}
+
+
 		long fin = System.currentTimeMillis() - strt;
 		logger.info("BengenApplication.createFile finish. time = " + fin + " ms.");
 	}
 
-	public StringBuffer createQuery(Integer num) {
-		logger.info("BengenApplication.createQuery start");
-		long strt = System.currentTimeMillis();
+	public List<Object[]> createBatchData(int num) {
+	    logger.info("BengenApplication.createBatchData start");
+	    long strt = System.currentTimeMillis();
 
-		Generator g = new Generator();
-		StringBuffer sb = new StringBuffer(
-				"INSERT INTO `db_identity`.`m_beneficiaryregidmapping` " +
-						"(`BeneficiaryID`,`Provisioned`,`Deleted`," +
-						"`CreatedDate`,`CreatedBy`) VALUES ");
+	    Timestamp ts = Timestamp.from(Instant.now());
+	    Generator g = new Generator();
 
-		// INSERT INTO `db_identity`.`m_beneficiaryregidmapping`
-		// (`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`,`CreatedBy`) VALUES
-		// (<{BeneficiaryID: }>, <{Provisioned: b'0'}>, <{Deleted: b'0'}>,
-		// <{CreatedDate: CURRENT_TIMESTAMP}>, <{CreatedBy: }>);
+	    // Use parallelStream to generate Beneficiary IDs concurrently
+	    List<Object[]> data = IntStream.range(0, num).parallel()
+	        .mapToObj(i -> new Object[]{
+	            g.generateBeneficiaryId(), // Assuming it's thread-safe
+	            ts,
+	            ADMIN_BATCH
+	        })
+	        .collect(Collectors.toList());
 
-		Timestamp ts = Timestamp.from(Instant.now());
-
-		for (int i = 0; i < num; i++) {
-			sb.append("( ");
-			sb.append(g.generateBeneficiaryId())
-					.append(",")
-					.append("b'0'")
-					.append(",")
-					.append("b'0'")
-					.append(",")
-					.append("'")
-					.append(ts)
-					.append("',")
-					.append("'admin-batch'")
-					.append("");
-			sb.append(" ), ");
-		}
-
-		sb.deleteCharAt(sb.lastIndexOf(","));
-
-		jdbcTemplate.execute(sb.toString());
-
-		long fin = System.currentTimeMillis() - strt;
-		logger.info("BengenApplication.createQuery finish. time = " + fin + " ms.");
-
-		return sb;
+	    long fin = System.currentTimeMillis() - strt;
+	    logger.info("BengenApplication.createBatchData finish. time = " + fin + " ms.");
+	    return data;
 	}
 
 	public void testLoopGenr() {
