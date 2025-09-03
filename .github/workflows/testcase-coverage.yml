@@ -1,74 +1,44 @@
 name: TestCase Coverage Check
+
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
-  pull_request_target:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize]
 
-permissions:
-  contents: read
-  pull-requests: write
-  actions: read
-  checks: write
+permissions: {} 
 
 jobs:
-  coverage-check:
+  build_and_check_coverage:
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout PR code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+    permissions:
+      contents: read
       
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven
-      
+
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-      
-      - name: Build and run tests with Maven
-        run: |
-          mvn clean compile test-compile
-          mvn test jacoco:report
-        env:
-          MAVEN_OPTS: "-Dmaven.repo.local=~/.m2/repository"
-      
-      - name: Verify JaCoCo report exists
-        run: |
-          if [ ! -f "target/site/jacoco/jacoco.xml" ]; then
-            echo "JaCoCo report not found. Checking alternative locations..."
-            find . -name "jacoco.xml" -type f || echo "No jacoco.xml found anywhere"
-            exit 1
-          fi
-          echo "JaCoCo report found at target/site/jacoco/jacoco.xml"
-      
-      - name: Upload JaCoCo Report Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: jacoco-report-${{ github.event.pull_request.number }}
-          path: target/site/jacoco/
-          retention-days: 30
-          if-no-files-found: error
-      
-      - name: Add coverage report to PR
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Build with Maven
+        run: mvn clean verify
+
+      - name: Run Coverage Check
         uses: madrapps/jacoco-report@v1.7.2
         with:
-          paths: ${{ github.workspace }}/target/site/jacoco/jacoco.xml
+          paths: target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
-          min-coverage-overall: 0
-          min-coverage-changed-files: 0
-          title: 📊 Code Coverage Report
-          update-comment: true
+          min-coverage-overall: 40
+          min-coverage-changed-files: 60
+          title: Code Coverage Report
           comment-type: pr_comment
-          skip-if-no-changes: false 
