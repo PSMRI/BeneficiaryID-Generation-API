@@ -29,3 +29,6 @@ mvnw.cmd
 .mvn/
 src/main/environment/bengen_ci.properties
 bengen_local.properties
+
+### Commitlint Config ### 
+node_modules
