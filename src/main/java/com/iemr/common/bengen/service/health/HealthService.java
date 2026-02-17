@@ -3,16 +3,10 @@ package com.iemr.common.bengen.service.health;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
@@ -22,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import com.zaxxer.hikari.HikariDataSource;
 
 @Service
 public class HealthService {
@@ -34,12 +27,6 @@ public class HealthService {
     private static final String STATUS_UP = "UP";
     private static final String STATUS_DOWN = "DOWN";
     private static final String UNKNOWN_VALUE = "unknown";
-    private static final int CONNECTION_ACQUISITION_TIMEOUT_SECONDS = 2;
-    private static final ExecutorService executorService = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "HealthCheckConnectionPool");
-        t.setDaemon(true);
-        return t;
-    });
 
     private final DataSource dataSource;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -102,9 +89,7 @@ public class HealthService {
 
         return performHealthCheck("MySQL", details, () -> {
             try {
-
-                Connection connection = getConnectionWithTimeout();
-                try {
+                try (Connection connection = dataSource.getConnection()) {
                     if (connection.isValid(2)) {
                         try (PreparedStatement stmt = connection.prepareStatement(DB_HEALTH_CHECK_QUERY)) {
                             stmt.setQueryTimeout(3);
@@ -117,58 +102,11 @@ public class HealthService {
                         }
                     }
                     return new HealthCheckResult(false, null, "Connection validation failed");
-                } finally {
-                    if (connection != null) {
-                        connection.close();
-                    }
                 }
-            } catch (TimeoutException e) {
-                logger.warn("MySQL health check timed out - connection pool may be exhausted", e);
-                throw new IllegalStateException(
-                    "Failed to acquire database connection within " + 
-                    CONNECTION_ACQUISITION_TIMEOUT_SECONDS + " seconds", e);
             } catch (Exception e) {
-                logger.error("MySQL health check failed with exception", e);
                 throw new IllegalStateException("Failed to perform MySQL health check", e);
             }
         });
-    }
-    
-
-    private Connection getConnectionWithTimeout() throws TimeoutException {
-        // If datasource is HikariDataSource, verify its connectionTimeout is set appropriately
-        if (dataSource instanceof HikariDataSource) {
-            HikariDataSource hikariDs = (HikariDataSource) dataSource;
-            long connectionTimeout = hikariDs.getConnectionTimeout();
-            if (connectionTimeout > 15000) {
-                logger.warn("HikariDataSource connectionTimeout is {}ms; consider reducing for health checks", 
-                    connectionTimeout);
-            }
-            // HikariDataSource already has built-in timeout; just acquire normally
-            try {
-                return hikariDs.getConnection();
-            } catch (SQLException e) {
-                throw new TimeoutException("Failed to acquire connection from HikariDataSource: " + e.getMessage());
-            }
-        }
-        
-        // Fallback for non-Hikari datasources: wrap in CompletableFuture with timeout
-        try {
-            return CompletableFuture.supplyAsync(() -> {
-                try {
-                    return dataSource.getConnection();
-                } catch (SQLException e) {
-                    throw new IllegalStateException("Error acquiring connection: " + e.getMessage(), e);
-                }
-            }, executorService).get(CONNECTION_ACQUISITION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            throw e;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new TimeoutException("Connection acquisition was interrupted: " + e.getMessage());
-        } catch (Exception e) {
-            throw new TimeoutException("Failed to acquire connection within timeout: " + e.getMessage());
-        }
     }
 
     private Map<String, Object> checkRedisHealth(boolean includeDetails) {
