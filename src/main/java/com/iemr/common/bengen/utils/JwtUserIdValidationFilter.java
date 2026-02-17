@@ -110,7 +110,8 @@ public class JwtUserIdValidationFilter implements Filter {
 		// Skip login and public endpoints
 		if (path.equals(contextPath + "/user/userAuthenticate")
 				|| path.equalsIgnoreCase(contextPath + "/user/logOutUserFromConcurrentSession")
-				|| path.startsWith(contextPath + "/public")) {
+				|| path.startsWith(contextPath + "/public")
+				|| path.equals(contextPath + "/health") || path.equals(contextPath + "/version")) {
 			logger.info("Skipping filter for path: " + path);
 			filterChain.doFilter(servletRequest, servletResponse);
 			return;
