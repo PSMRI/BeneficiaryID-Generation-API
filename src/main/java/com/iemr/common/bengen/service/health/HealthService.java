@@ -24,7 +24,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -63,14 +62,14 @@ public class HealthService {
     private volatile AdvancedCheckResult cachedAdvancedCheckResult = null;
     private final ReentrantReadWriteLock advancedCheckLock = new ReentrantReadWriteLock();
     
-    @Value("${health.advanced.enabled:true}")
-    private boolean advancedHealthChecksEnabled;
+    // Advanced checks always enabled
+    private static final boolean ADVANCED_HEALTH_CHECKS_ENABLED = true;
 
     public HealthService(DataSource dataSource,
                         @Autowired(required = false) RedisTemplate<String, Object> redisTemplate) {
         this.dataSource = dataSource;
         this.redisTemplate = redisTemplate;
-        this.executorService = Executors.newFixedThreadPool(2);
+        this.executorService = Executors.newFixedThreadPool(6);
     }
 
     @PreDestroy
@@ -97,7 +96,6 @@ public class HealthService {
         Map<String, Object> mysqlStatus = new ConcurrentHashMap<>();
         Map<String, Object> redisStatus = new ConcurrentHashMap<>();
         
-        // Submit both checks concurrently using executorService for proper cancellation support
         Future<?> mysqlFuture = executorService.submit(
             () -> performHealthCheck("MySQL", mysqlStatus, this::checkMySQLHealthSync));
         Future<?> redisFuture = executorService.submit(
@@ -163,19 +161,16 @@ public class HealthService {
             stmt.setQueryTimeout((int) MYSQL_TIMEOUT_SECONDS);
             
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    // Basic health check passed, now run advanced checks with throttling
-                    boolean isDegraded = performAdvancedMySQLChecksWithThrottle(connection);
-                    return new HealthCheckResult(true, null, isDegraded);
+                if (!rs.next()) {
+                    return new HealthCheckResult(false, "No result from health check query", false);
                 }
             }
-            
-            return new HealthCheckResult(false, "No result from health check query", false);
-            
         } catch (Exception e) {
             logger.warn("MySQL health check failed: {}", e.getMessage(), e);
             return new HealthCheckResult(false, "MySQL connection failed", false);
         }
+        boolean isDegraded = performAdvancedMySQLChecksWithThrottle();
+        return new HealthCheckResult(true, null, isDegraded);
     }
 
     private HealthCheckResult checkRedisHealthSync() {
@@ -296,8 +291,8 @@ public class HealthService {
     }
 
     // Internal advanced health checks for MySQL - do not expose details in responses
-    private boolean performAdvancedMySQLChecksWithThrottle(Connection connection) {
-        if (!advancedHealthChecksEnabled) {
+    private boolean performAdvancedMySQLChecksWithThrottle() {
+        if (!ADVANCED_HEALTH_CHECKS_ENABLED) {
             return false; // Advanced checks disabled
         }
         
@@ -324,7 +319,13 @@ public class HealthService {
                 return cachedAdvancedCheckResult.isDegraded;
             }
             
-            AdvancedCheckResult result = performAdvancedMySQLChecks(connection);
+            AdvancedCheckResult result;
+            try (Connection conn = dataSource.getConnection()) {
+                result = performAdvancedMySQLChecks(conn);
+            } catch (Exception ex) {
+                logger.debug("Could not acquire connection for advanced checks: {}", ex.getMessage());
+                result = new AdvancedCheckResult(true);
+            }
             
             // Cache the result
             lastAdvancedCheckTime = currentTime;
@@ -385,7 +386,7 @@ public class HealthService {
     private boolean hasSlowQueries(Connection connection) {
         try (PreparedStatement stmt = connection.prepareStatement(
                 "SELECT COUNT(*) FROM INFORMATION_SCHEMA.PROCESSLIST " +
-                "WHERE command != 'Sleep' AND time > ? AND user NOT IN ('event_scheduler', 'system user')")) {
+                "WHERE command != 'Sleep' AND time > ? AND user = SUBSTRING_INDEX(USER(), '@', 1)")) {
             stmt.setQueryTimeout(2);
             stmt.setInt(1, 10); // Queries running longer than 10 seconds
             try (ResultSet rs = stmt.executeQuery()) {
