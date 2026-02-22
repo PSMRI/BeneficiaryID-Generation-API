@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -50,7 +51,6 @@ public class HealthService {
     private static final long ADVANCED_CHECKS_THROTTLE_SECONDS = 30;
     private static final long RESPONSE_TIME_THRESHOLD_MS = 2000;
     private static final String DIAGNOSTIC_LOCK_WAIT = "MYSQL_LOCK_WAIT";
-    private static final String DIAGNOSTIC_DEADLOCK = "MYSQL_DEADLOCK";
     private static final String DIAGNOSTIC_SLOW_QUERIES = "MYSQL_SLOW_QUERIES";
     private static final String DIAGNOSTIC_POOL_EXHAUSTED = "MYSQL_POOL_EXHAUSTED";
     private static final String DIAGNOSTIC_LOG_TEMPLATE = "Diagnostic: {}";
@@ -62,9 +62,6 @@ public class HealthService {
     private volatile long lastAdvancedCheckTime = 0;
     private volatile AdvancedCheckResult cachedAdvancedCheckResult = null;
     private final ReentrantReadWriteLock advancedCheckLock = new ReentrantReadWriteLock();
-    
-    // Deadlock check resilience - disable after first permission error
-    private volatile boolean deadlockCheckDisabled = false;
     
     @Value("${health.advanced.enabled:true}")
     private boolean advancedHealthChecksEnabled;
@@ -108,27 +105,7 @@ public class HealthService {
         
         // Wait for both checks to complete with combined timeout (shared deadline)
         long maxTimeout = Math.max(MYSQL_TIMEOUT_SECONDS, REDIS_TIMEOUT_SECONDS) + 1;
-        long deadlineNs = System.nanoTime() + TimeUnit.SECONDS.toNanos(maxTimeout);
-        try {
-            mysqlFuture.get(maxTimeout, TimeUnit.SECONDS);
-            long remainingNs = deadlineNs - System.nanoTime();
-            if (remainingNs > 0) {
-                redisFuture.get(remainingNs, TimeUnit.NANOSECONDS);
-            } else {
-                redisFuture.cancel(true);
-            }
-        } catch (TimeoutException e) {
-            logger.warn("Health check aggregate timeout after {} seconds", maxTimeout);
-            mysqlFuture.cancel(true);
-            redisFuture.cancel(true);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.warn("Health check was interrupted");
-            mysqlFuture.cancel(true);
-            redisFuture.cancel(true);
-        } catch (Exception e) {
-            logger.warn("Health check execution error: {}", e.getMessage());
-        }
+        awaitHealthChecks(mysqlFuture, redisFuture, maxTimeout);
         
         // Ensure timed-out or unfinished components are marked DOWN
         ensurePopulated(mysqlStatus, "MySQL");
@@ -145,6 +122,30 @@ public class HealthService {
         response.put(STATUS_KEY, overallStatus);
         
         return response;
+    }
+
+    private void awaitHealthChecks(Future<?> mysqlFuture, Future<?> redisFuture, long maxTimeoutSeconds) {
+        long deadlineNs = System.nanoTime() + TimeUnit.SECONDS.toNanos(maxTimeoutSeconds);
+        try {
+            mysqlFuture.get(maxTimeoutSeconds, TimeUnit.SECONDS);
+            long remainingNs = deadlineNs - System.nanoTime();
+            if (remainingNs > 0) {
+                redisFuture.get(remainingNs, TimeUnit.NANOSECONDS);
+            } else {
+                redisFuture.cancel(true);
+            }
+        } catch (TimeoutException e) {
+            logger.warn("Health check aggregate timeout after {} seconds", maxTimeoutSeconds);
+            mysqlFuture.cancel(true);
+            redisFuture.cancel(true);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warn("Health check was interrupted");
+            mysqlFuture.cancel(true);
+            redisFuture.cancel(true);
+        } catch (Exception e) {
+            logger.warn("Health check execution error: {}", e.getMessage());
+        }
     }
 
     private void ensurePopulated(Map<String, Object> status, String componentName) {
@@ -183,7 +184,8 @@ public class HealthService {
         }
         
         try {
-            String pong = redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<String>) (connection) -> connection.ping());
+            String pong = redisTemplate.execute(
+                (RedisCallback<String>) connection -> connection.ping());
             
             if ("PONG".equals(pong)) {
                 return new HealthCheckResult(true, null, false);
@@ -343,11 +345,6 @@ public class HealthService {
                 hasIssues = true;
             }
             
-            if (hasDeadlocks(connection)) {
-                logger.warn(DIAGNOSTIC_LOG_TEMPLATE, DIAGNOSTIC_DEADLOCK);
-                hasIssues = true;
-            }
-            
             if (hasSlowQueries(connection)) {
                 logger.warn(DIAGNOSTIC_LOG_TEMPLATE, DIAGNOSTIC_SLOW_QUERIES);
                 hasIssues = true;
@@ -371,7 +368,7 @@ public class HealthService {
                 "WHERE (state = 'Waiting for table metadata lock' " +
                 "   OR state = 'Waiting for row lock' " +
                 "   OR state = 'Waiting for lock') " +
-                "AND user = USER()")) {
+                "AND user = SUBSTRING_INDEX(USER(), '@', 1)")) {
             stmt.setQueryTimeout(2);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -381,37 +378,6 @@ public class HealthService {
             }
         } catch (Exception e) {
             logger.debug("Could not check for lock waits");
-        }
-        return false;
-    }
-
-    private boolean hasDeadlocks(Connection connection) {
-        // Skip deadlock check if already disabled due to permissions
-        if (deadlockCheckDisabled) {
-            return false;
-        }
-        
-        try (PreparedStatement stmt = connection.prepareStatement("SHOW ENGINE INNODB STATUS")) {
-            stmt.setQueryTimeout(2);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    String innodbStatus = rs.getString(3);
-                    return innodbStatus != null && innodbStatus.contains("LATEST DETECTED DEADLOCK");
-                }
-            }
-        } catch (java.sql.SQLException e) {
-            // Check if this is a permission error
-            if (e.getMessage() != null && 
-                (e.getMessage().contains("Access denied") || 
-                 e.getMessage().contains("permission"))) {
-                // Disable this check permanently after first permission error
-                deadlockCheckDisabled = true;
-                logger.warn("Deadlock check disabled: Insufficient privileges");
-            } else {
-                logger.debug("Could not check for deadlocks");
-            }
-        } catch (Exception e) {
-            logger.debug("Could not check for deadlocks");
         }
         return false;
     }
