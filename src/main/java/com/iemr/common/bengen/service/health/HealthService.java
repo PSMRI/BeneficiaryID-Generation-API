@@ -318,19 +318,27 @@ public class HealthService {
                 (currentTime - lastAdvancedCheckTime) < ADVANCED_CHECKS_THROTTLE_SECONDS * 1000) {
                 return cachedAdvancedCheckResult.isDegraded;
             }
-            
-            AdvancedCheckResult result;
-            try (Connection conn = dataSource.getConnection()) {
-                result = performAdvancedMySQLChecks(conn);
-            } catch (Exception ex) {
-                logger.debug("Could not acquire connection for advanced checks: {}", ex.getMessage());
-                result = new AdvancedCheckResult(true);
+        } finally {
+            advancedCheckLock.writeLock().unlock();
+        }
+        
+        // Perform DB I/O outside the write lock to avoid lock contention
+        AdvancedCheckResult result;
+        try (Connection conn = dataSource.getConnection()) {
+            result = performAdvancedMySQLChecks(conn);
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
             }
-            
-            // Cache the result
+            logger.debug("Could not acquire connection for advanced checks: {}", ex.getMessage());
+            result = new AdvancedCheckResult(false); // don't mark degraded on acquisition failure
+        }
+        
+        // Re-acquire write lock only to update the cache atomically
+        advancedCheckLock.writeLock().lock();
+        try {
             lastAdvancedCheckTime = currentTime;
             cachedAdvancedCheckResult = result;
-            
             return result.isDegraded;
         } finally {
             advancedCheckLock.writeLock().unlock();
