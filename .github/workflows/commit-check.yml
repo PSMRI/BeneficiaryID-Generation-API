@@ -20,5 +20,5 @@ jobs:
       - name: Validate commit messages
         run: |
           git log --no-merges --pretty=format:%s ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | while IFS= read -r commit; do
-            echo "$commit" | npx --no-install commitlint
+            echo "$commit" | npx --yes @commitlint/cli
           done
