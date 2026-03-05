@@ -1,0 +1,25 @@
+name: Commit Message Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  commit-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate commit messages
+        run: |
+          regex='^(feat|fix|docs|style|refactor|test|chore)(\([a-zA-Z0-9_-]+\))?: .+'
+          
+          commits=$(git log origin/main..HEAD --pretty=format:%s)
+
+          for commit in $commits; do
+            if ! echo "$commit" | grep -Eq "$regex"; then
+              echo "Invalid commit message: $commit"
+              exit 1
+            fi
+          done
