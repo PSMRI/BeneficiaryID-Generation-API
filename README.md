@@ -29,7 +29,7 @@ type(scope): message
 
 After cloning the repository, run the following command once to activate the hooks:
 
-git config core.hooksPath .git-hooks
+`git config core.hooksPath .git-hooks`
 
 This enables the `commit-msg` hook located in the `.git-hooks` directory.
 

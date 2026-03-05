@@ -3,7 +3,17 @@ module.exports = {
     'type-enum': [
       2,
       'always',
-      ['feat', 'fix', 'docs', 'style', 'refactor', 'test', 'chore']
+      ['build', 
+       'chore', 
+       'ci', 
+       'docs', 
+       'feat', 
+       'fix', 
+       'perf', 
+       'refactor', 
+       'revert', 
+       'style', 
+       'test']
     ],
     'type-case': [2, 'always', 'lower-case'],
     'scope-empty': [2, 'never'],

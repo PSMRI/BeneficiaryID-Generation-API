@@ -15,7 +15,7 @@ jobs:
 
       - name: Validate commit messages
         run: |
-          regex='^(feat|fix|docs|style|refactor|test|chore)\([a-zA-Z0-9_\-\.]+\): .+'
+          regex='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)\([a-zA-Z0-9_\-\.]+\): .+'
 
           invalid=$(git log --pretty=format:%s ${{ github.event.pull_request.base.sha }}..${{ github.sha }} | grep -Ev "$regex" || true)
           if [ -n "$invalid" ]; then
