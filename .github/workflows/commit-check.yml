@@ -13,11 +13,9 @@ jobs:
 
       - name: Validate commit messages
         run: |
-          regex='^(feat|fix|docs|style|refactor|test|chore)(\([a-zA-Z0-9_-]+\))?: .+'
-          
-          commits=$(git log origin/main..HEAD --pretty=format:%s)
+          regex='^(feat|fix|docs|style|refactor|test|chore)\([a-zA-Z0-9_-]+\): .+'
 
-          for commit in $commits; do
+          git log --pretty=format:%s ${{ github.event.pull_request.base.sha }}..${{ github.sha }} | while read commit; do
             if ! echo "$commit" | grep -Eq "$regex"; then
               echo "Invalid commit message: $commit"
               exit 1
