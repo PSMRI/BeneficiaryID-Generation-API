@@ -23,7 +23,7 @@ This repository enforces commit message format using a Git `commit-msg` hook and
 
 All commits must follow this format:
 
-type(scope): message
+`type(scope): message`
 
 ### Enable Git Hooks
 

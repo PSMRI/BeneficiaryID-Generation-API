@@ -17,9 +17,12 @@ jobs:
         run: |
           regex='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)\([a-zA-Z0-9_\-\.]+\): .+'
 
-          invalid=$(git log --pretty=format:%s ${{ github.event.pull_request.base.sha }}..${{ github.sha }} | grep -Ev "$regex" || true)
+          invalid=$(git log --no-merges --pretty=format:%s ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -Ev "$regex" || true)
+
           if [ -n "$invalid" ]; then
             echo "Invalid commit messages found:"
             echo "$invalid"
             exit 1
           fi
+
+          echo "All commit messages follow the required format."
