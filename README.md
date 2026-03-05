@@ -15,6 +15,31 @@ Find the detailed list of software dependencies [here] (https://piramal-swasthya
 * Redis
 * MySQL Database
 
+## Commit Message Validation
+
+This repository enforces commit message format using a Git `commit-msg` hook and GitHub workflow.
+
+### Commit Format
+
+All commits must follow this format:
+
+type(scope): message
+
+### Enable Git Hooks
+
+After cloning the repository, run the following command once to activate the hooks:
+
+git config core.hooksPath .git-hooks
+
+This enables the `commit-msg` hook located in the `.git-hooks` directory.
+
+### Validation
+
+Commit messages are validated in two ways:
+
+1. Local Git hook using Commitlint via `npx`
+2. GitHub workflow that checks commit messages during pull requests
+
 ### Installation and setup
 
 Please follow these steps:

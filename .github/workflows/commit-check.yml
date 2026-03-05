@@ -10,14 +10,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Validate commit messages
         run: |
-          regex='^(feat|fix|docs|style|refactor|test|chore)\([a-zA-Z0-9_-]+\): .+'
+          regex='^(feat|fix|docs|style|refactor|test|chore)\([a-zA-Z0-9_\-\.]+\): .+'
 
-          git log --pretty=format:%s ${{ github.event.pull_request.base.sha }}..${{ github.sha }} | while read commit; do
-            if ! echo "$commit" | grep -Eq "$regex"; then
-              echo "Invalid commit message: $commit"
-              exit 1
-            fi
-          done
+          invalid=$(git log --pretty=format:%s ${{ github.event.pull_request.base.sha }}..${{ github.sha }} | grep -Ev "$regex" || true)
+          if [ -n "$invalid" ]; then
+            echo "Invalid commit messages found:"
+            echo "$invalid"
+            exit 1
+          fi
