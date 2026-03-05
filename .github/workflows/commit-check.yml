@@ -13,16 +13,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Validate commit messages
         run: |
-          regex='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)\([a-zA-Z0-9_\-\.]+\): .+'
-
-          invalid=$(git log --no-merges --pretty=format:%s ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -Ev "$regex" || true)
-
-          if [ -n "$invalid" ]; then
-            echo "Invalid commit messages found:"
-            echo "$invalid"
-            exit 1
-          fi
-
-          echo "All commit messages follow the required format."
+          git log --no-merges --pretty=format:%s ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | while IFS= read -r commit; do
+            echo "$commit" | npx --no-install commitlint
+          done
