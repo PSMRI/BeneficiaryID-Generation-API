@@ -20,13 +20,15 @@ Find the detailed list of software dependencies [here] (https://piramal-swasthya
 Please follow these steps:
 
 1. Clone the repository to your local machine.
-2. Install the dependencies and build the module:
+2. Enable git hooks (run once after cloning):
+   - Run the command `git config core.hooksPath .git-hooks`.
+3. Install the dependencies and build the module:
     - Run the command `mvn clean install`.
-3. You can copy `bengen_example.properties` to `bengen_local.properties` and edit the file accordingly. The file is under `src/main/environment` folder.
-4. Run the development server:
+4. You can copy `bengen_example.properties` to `bengen_local.properties` and edit the file accordingly. The file is under `src/main/environment` folder.
+5. Run the development server:
     - Start the Redis server.
     - Run the command `mvn spring-boot:run -DENV_VAR=local`.
-5. Open your browser and access `http://localhost:8080/swagger-ui.html#!/` to view the Swagger API documentation.
+6. Open your browser and access `http://localhost:8080/swagger-ui.html#!/` to view the Swagger API documentation.
 
 
 ## Usage
