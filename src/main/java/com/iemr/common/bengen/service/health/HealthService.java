@@ -90,36 +90,45 @@ public class HealthService {
     }
 
     public Map<String, Object> checkHealth() {
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("timestamp", Instant.now().toString());
-        
         Map<String, Object> mysqlStatus = new ConcurrentHashMap<>();
         Map<String, Object> redisStatus = new ConcurrentHashMap<>();
-        
+
         Future<?> mysqlFuture = executorService.submit(
             () -> performHealthCheck("MySQL", mysqlStatus, this::checkMySQLHealthSync));
         Future<?> redisFuture = executorService.submit(
             () -> performHealthCheck("Redis", redisStatus, this::checkRedisHealthSync));
-        
+
         // Wait for both checks to complete with combined timeout (shared deadline)
         long maxTimeout = Math.max(MYSQL_TIMEOUT_SECONDS, REDIS_TIMEOUT_SECONDS) + 1;
         awaitHealthChecks(mysqlFuture, redisFuture, maxTimeout);
-        
+
         // Ensure timed-out or unfinished components are marked DOWN
         ensurePopulated(mysqlStatus, "MySQL");
         ensurePopulated(redisStatus, "Redis");
-        
-        Map<String, Map<String, Object>> components = new LinkedHashMap<>();
-        components.put("mysql", mysqlStatus);
-        components.put("redis", redisStatus);
-        
-        response.put("components", components);
-        
-        // Compute overall status
-        String overallStatus = computeOverallStatus(components);
-        response.put(STATUS_KEY, overallStatus);
-        
+
+        // Build response in the standardized AMRIT shape (aligned with Common-API):
+        // top-level status + checkedAt, then per-service status/severity summaries.
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        String mysqlOverall = (String) mysqlStatus.get(STATUS_KEY);
+        String redisOverall = (String) redisStatus.get(STATUS_KEY);
+        boolean overallUp = !STATUS_DOWN.equals(mysqlOverall) && !STATUS_DOWN.equals(redisOverall);
+
+        response.put(STATUS_KEY, overallUp ? STATUS_UP : STATUS_DOWN);
+        response.put("checkedAt", Instant.now().toString());
+
+        // Expose only status and severity; keep diagnostics (responseTime, messages) internal
+        response.put("mysql", summarize(mysqlStatus));
+        response.put("redis", summarize(redisStatus));
+
         return response;
+    }
+
+    private Map<String, Object> summarize(Map<String, Object> componentStatus) {
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put(STATUS_KEY, componentStatus.get(STATUS_KEY));
+        summary.put(SEVERITY_KEY, componentStatus.get(SEVERITY_KEY));
+        return summary;
     }
 
     private void awaitHealthChecks(Future<?> mysqlFuture, Future<?> redisFuture, long maxTimeoutSeconds) {
@@ -256,38 +265,6 @@ public class HealthService {
         }
         
         return SEVERITY_OK;
-    }
-
-    private String computeOverallStatus(Map<String, Map<String, Object>> components) {
-        boolean hasCritical = false;
-        boolean hasDegraded = false;
-        
-        for (Map<String, Object> componentStatus : components.values()) {
-            String status = (String) componentStatus.get(STATUS_KEY);
-            String severity = (String) componentStatus.get(SEVERITY_KEY);
-            
-            if (STATUS_DOWN.equals(status) || SEVERITY_CRITICAL.equals(severity)) {
-                hasCritical = true;
-            }
-            
-            if (STATUS_DEGRADED.equals(status)) {
-                hasDegraded = true;
-            }
-            
-            if (SEVERITY_WARNING.equals(severity)) {
-                hasDegraded = true;
-            }
-        }
-        
-        if (hasCritical) {
-            return STATUS_DOWN;
-        }
-        
-        if (hasDegraded) {
-            return STATUS_DEGRADED;
-        }
-        
-        return STATUS_UP;
     }
 
     // Internal advanced health checks for MySQL - do not expose details in responses
