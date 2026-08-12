@@ -103,11 +103,11 @@ public class GenerateBeneficiaryService {
 
 		Generator g = new Generator();
 		StringBuffer sb = new StringBuffer(
-				"INSERT INTO `db_1097_identity`.`m_beneficiaryregidmapping` " +
+				"INSERT INTO `m_beneficiaryregidmapping` " +
 						"(`BeneficiaryID`,`Provisioned`,`Deleted`," +
 						"`CreatedDate`,`CreatedBy`) VALUES ");
 
-		// INSERT INTO `db_identity`.`m_beneficiaryregidmapping`
+		// INSERT INTO `m_beneficiaryregidmapping`
 		// (`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`,`CreatedBy`) VALUES
 		// (<{BeneficiaryID: }>, <{Provisioned: b'0'}>, <{Deleted: b'0'}>,
 		// <{CreatedDate: CURRENT_TIMESTAMP}>, <{CreatedBy: }>);
@@ -143,7 +143,7 @@ public class GenerateBeneficiaryService {
 	public void testLoopGenr() {
 		List<String> strList = new ArrayList<String>();
 		StringBuffer sb = new StringBuffer(
-				"INSERT INTO `db_1097_identity`.`m_beneficiaryregidmapping` " +
+				"INSERT INTO `m_beneficiaryregidmapping` " +
 						"(`BeneficiaryID`,`Provisioned`,`Deleted`,`CreatedDate`," +
 						"`CreatedBy`) VALUES ");
 		Timestamp ts = Timestamp.from(Instant.now());
@@ -167,7 +167,7 @@ public class GenerateBeneficiaryService {
 		long strt = System.currentTimeMillis();
 		Generator g = new Generator();
 		StringBuffer sb = new StringBuffer(
-				"INSERT INTO `db_1097_identity`.`m_beneficiaryregidmapping` " +
+				"INSERT INTO `m_beneficiaryregidmapping` " +
 						"(`BeneficiaryID`,`Provisioned`,`Deleted`,`Reserved`," +
 						"`CreatedDate`,`CreatedBy`,`VanID`) VALUES ");
 		Timestamp ts = Timestamp.from(Instant.now());
