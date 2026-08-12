@@ -73,7 +73,7 @@ class GenerateBeneficiaryServiceTest {
     Path tempDir;
 
     private static final BigInteger MOCKED_BENEFICIARY_ID = new BigInteger("12345678901");
-    private static final String EXPECTED_TABLE_NAME = "`db_identity`.`m_beneficiaryregidmapping`";
+    private static final String EXPECTED_TABLE_NAME = "`db_1097_identity`.`m_beneficiaryregidmapping`";
     private static final String EXPECTED_CREATOR = "admin-batch";
     
     @BeforeEach

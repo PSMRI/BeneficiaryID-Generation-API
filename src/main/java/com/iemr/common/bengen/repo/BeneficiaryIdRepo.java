@@ -116,7 +116,7 @@ public interface BeneficiaryIdRepo extends CrudRepository<BeneficiaryId, BigInte
 	
 		@Query(nativeQuery = true, value = "Select benregMap.benRegId, benregMap.beneficiaryId, " +
 				"benregMap.CreatedDate "
-				+ "from db_identity.m_beneficiaryregidmapping  benregMap "
+				+ "from db_1097_identity.m_beneficiaryregidmapping  benregMap "
 				+ "where benregMap.provisioned =false and benregMap.reserved =true " +
 				"and benregMap.vanID=:vanID order by benregMap.benRegId desc limit :num ")
 		List<Object[]> getBenIDGenerated(@Param("vanID") Integer vanID, @Param("num") Long num);
