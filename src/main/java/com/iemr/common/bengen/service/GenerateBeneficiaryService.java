@@ -103,7 +103,7 @@ public class GenerateBeneficiaryService {
 
 		Generator g = new Generator();
 		StringBuffer sb = new StringBuffer(
-				"INSERT INTO `db_identity`.`m_beneficiaryregidmapping` " +
+				"INSERT INTO `db_1097_identity`.`m_beneficiaryregidmapping` " +
 						"(`BeneficiaryID`,`Provisioned`,`Deleted`," +
 						"`CreatedDate`,`CreatedBy`) VALUES ");
 
