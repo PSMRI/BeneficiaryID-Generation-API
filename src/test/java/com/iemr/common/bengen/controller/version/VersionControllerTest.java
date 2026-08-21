@@ -34,14 +34,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.stream.Collectors;
+import java.util.Properties;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.iemr.common.bengen.utils.response.OutputResponse;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("VersionController Test Suite")
@@ -60,29 +57,22 @@ class VersionControllerTest {
     }
 
     @Test
-    @DisplayName("Should return git.properties content when successfully read from test resources")
+    @DisplayName("Should return version details sourced from git.properties on the classpath")
     void versionInformation_shouldReturnGitPropertiesContent() throws Exception {
-        String expectedGitPropertiesContent;
+        Properties gitProperties = new Properties();
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("git.properties")) {
             if (inputStream == null) {
                 throw new IOException("git.properties file not found in test resources.");
             }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-                expectedGitPropertiesContent = reader.lines().collect(Collectors.joining("\n"));
-                if (!expectedGitPropertiesContent.endsWith("\n")) {
-                    expectedGitPropertiesContent += "\n";
-                }
-            }
+            gitProperties.load(inputStream);
         }
-
-        OutputResponse expectedOutput = new OutputResponse();
-        expectedOutput.setResponse(expectedGitPropertiesContent);
-
-        String expectedJsonResponse = expectedOutput.toString();
 
         mockMvc.perform(get("/version"))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isOk())
-                .andExpect(content().json(expectedJsonResponse));
+                .andExpect(jsonPath("$.buildTimestamp").value(gitProperties.getProperty("git.build.time", "unknown")))
+                .andExpect(jsonPath("$.version").value(gitProperties.getProperty("git.build.version", "unknown")))
+                .andExpect(jsonPath("$.branch").value(gitProperties.getProperty("git.branch", "unknown")))
+                .andExpect(jsonPath("$.commitHash").value(gitProperties.getProperty("git.commit.id.abbrev", "unknown")));
     }
 }
