@@ -30,6 +30,9 @@ import java.util.concurrent.RejectedExecutionException;
 
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariPoolMXBean;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -48,6 +51,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -58,6 +63,8 @@ import static org.mockito.Mockito.verify;
 class HealthServiceTest {
 
     private static final int THRESHOLD = 5000;
+    private static final String COUNT_SQL =
+            "SELECT COUNT(*) FROM m_beneficiaryregidmapping WHERE Provisioned = 0 AND Reserved = 0";
 
     @Mock
     private DataSource dataSource;
@@ -301,6 +308,115 @@ class HealthServiceTest {
             healthService.shutdown();
 
             assertDoesNotThrow(() -> healthService.shutdown());
+        }
+    }
+
+    @Nested
+    @DisplayName("Advanced MySQL diagnostics")
+    class AdvancedDiagnosticsTests {
+
+        @Test
+        @DisplayName("checkHealth should flag MySQL DEGRADED when the pool is more than 80% exhausted")
+        void checkHealth_shouldFlagDegradedWhenHikariPoolNearlyExhausted() throws SQLException {
+            HikariDataSource hikariDataSource = mock(HikariDataSource.class);
+            HikariPoolMXBean poolMXBean = mock(HikariPoolMXBean.class);
+            lenient().when(hikariDataSource.getConnection()).thenReturn(connection);
+            lenient().when(hikariDataSource.getHikariPoolMXBean()).thenReturn(poolMXBean);
+            lenient().when(hikariDataSource.getMaximumPoolSize()).thenReturn(10);
+            lenient().when(poolMXBean.getActiveConnections()).thenReturn(9);
+            lenient().when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
+            lenient().when(preparedStatement.executeQuery()).thenReturn(resultSet);
+            lenient().when(resultSet.next()).thenReturn(true);
+            lenient().when(resultSet.getLong(1)).thenReturn(THRESHOLD * 2L);
+            lenient().when(resultSet.getInt(1)).thenReturn(0);
+            stubRedisPong("PONG");
+            HealthService service = new HealthService(hikariDataSource, redisTemplate, THRESHOLD);
+
+            Map<String, Object> response = service.checkHealth();
+
+            assertEquals("DEGRADED", component(response, "mysql").get("status"));
+            assertEquals("WARNING", component(response, "mysql").get("severity"));
+            service.shutdown();
+        }
+
+        @Test
+        @DisplayName("checkHealth should stay UP when the Hikari pool is comfortably below the threshold")
+        void checkHealth_shouldStayUpWhenHikariPoolHasHeadroom() throws SQLException {
+            HikariDataSource hikariDataSource = mock(HikariDataSource.class);
+            HikariPoolMXBean poolMXBean = mock(HikariPoolMXBean.class);
+            lenient().when(hikariDataSource.getConnection()).thenReturn(connection);
+            lenient().when(hikariDataSource.getHikariPoolMXBean()).thenReturn(poolMXBean);
+            lenient().when(hikariDataSource.getMaximumPoolSize()).thenReturn(10);
+            lenient().when(poolMXBean.getActiveConnections()).thenReturn(2);
+            lenient().when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
+            lenient().when(preparedStatement.executeQuery()).thenReturn(resultSet);
+            lenient().when(resultSet.next()).thenReturn(true);
+            lenient().when(resultSet.getLong(1)).thenReturn(THRESHOLD * 2L);
+            lenient().when(resultSet.getInt(1)).thenReturn(0);
+            stubRedisPong("PONG");
+            HealthService service = new HealthService(hikariDataSource, redisTemplate, THRESHOLD);
+
+            Map<String, Object> response = service.checkHealth();
+
+            assertEquals("UP", component(response, "mysql").get("status"));
+            service.shutdown();
+        }
+
+        @Test
+        @DisplayName("checkHealth should stay UP when the Hikari pool exposes no MXBean")
+        void checkHealth_shouldStayUpWhenHikariMxBeanUnavailable() throws SQLException {
+            HikariDataSource hikariDataSource = mock(HikariDataSource.class);
+            lenient().when(hikariDataSource.getConnection()).thenReturn(connection);
+            lenient().when(hikariDataSource.getHikariPoolMXBean()).thenReturn(null);
+            lenient().when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
+            lenient().when(preparedStatement.executeQuery()).thenReturn(resultSet);
+            lenient().when(resultSet.next()).thenReturn(true);
+            lenient().when(resultSet.getLong(1)).thenReturn(THRESHOLD * 2L);
+            lenient().when(resultSet.getInt(1)).thenReturn(0);
+            stubRedisPong("PONG");
+            HealthService service = new HealthService(hikariDataSource, redisTemplate, THRESHOLD);
+
+            Map<String, Object> response = service.checkHealth();
+
+            assertEquals("UP", component(response, "mysql").get("status"));
+            service.shutdown();
+        }
+
+        @Test
+        @DisplayName("checkHealth should treat MySQL as DEGRADED when a diagnostic query fails outright")
+        void checkHealth_shouldTreatDiagnosticQueryFailureAsDegraded() throws SQLException {
+            lenient().when(dataSource.getConnection()).thenReturn(connection);
+            lenient().when(connection.prepareStatement("SELECT 1 as health_check")).thenReturn(preparedStatement);
+            lenient().when(connection.prepareStatement(COUNT_SQL)).thenReturn(preparedStatement);
+            lenient().when(connection.prepareStatement(argThat(sql ->
+                    sql != null && sql.contains("INFORMATION_SCHEMA.PROCESSLIST"))))
+                    .thenThrow(new SQLException("diagnostics denied"));
+            lenient().when(preparedStatement.executeQuery()).thenReturn(resultSet);
+            lenient().when(resultSet.next()).thenReturn(true);
+            lenient().when(resultSet.getLong(1)).thenReturn(THRESHOLD * 2L);
+            stubRedisPong("PONG");
+
+            Map<String, Object> response = healthService.checkHealth();
+
+            assertEquals("UP", component(response, "mysql").get("status"),
+                    "a failed diagnostic query is swallowed and must not degrade the component");
+        }
+
+        @Test
+        @DisplayName("checkHealth should mark a component DOWN when its check does not finish in time")
+        void checkHealth_shouldMarkComponentDownWhenCheckTimesOut() throws SQLException {
+            lenient().when(dataSource.getConnection()).thenAnswer(invocation -> {
+                Thread.sleep(6_000);
+                return connection;
+            });
+            stubRedisPong("PONG");
+
+            Map<String, Object> response = healthService.checkHealth();
+
+            assertEquals("DOWN", response.get("status"));
+            assertEquals("DOWN", component(response, "mysql").get("status"));
+            assertEquals("CRITICAL", component(response, "mysql").get("severity"));
+            assertEquals("DEGRADED", component(response, "beneficiaryIdPool").get("status"));
         }
     }
 }
