@@ -245,4 +245,55 @@ class OutputResponseTest {
             assertEquals("something odd", outputResponse.getErrorMessage());
         }
     }
+
+    @Nested
+    @DisplayName("Error mapping for exception types raised by other AMRIT modules")
+    class ExternalExceptionMappingTests {
+
+        // setError switches on getClass().getSimpleName(), so locally declared types with
+        // the same simple names reach the arms meant for Hibernate/JDBC exceptions.
+        private static class JDBCException extends Exception {
+            JDBCException(String message) {
+                super(message);
+            }
+        }
+
+        private static class SQLGrammarException extends Exception {
+            SQLGrammarException(String message) {
+                super(message);
+            }
+        }
+
+        private static class ConstraintViolationException extends Exception {
+            ConstraintViolationException(String message) {
+                super(message);
+            }
+        }
+
+        @Test
+        @DisplayName("setError should map a JDBC failure to a DB connection environment error")
+        void setError_shouldMapJdbcFailure() {
+            outputResponse.setError(new JDBCException("pool exhausted"));
+
+            assertEquals(OutputResponse.ENVIRONMENT_EXCEPTION, outputResponse.getStatusCode());
+            assertTrue(outputResponse.getStatus().startsWith("Failed with DB connection issues at "));
+            assertEquals("pool exhausted", outputResponse.getErrorMessage());
+        }
+
+        @Test
+        @DisplayName("setError should map a SQL grammar failure to a code exception")
+        void setError_shouldMapSqlGrammarFailure() {
+            outputResponse.setError(new SQLGrammarException("bad column"));
+
+            assertEquals(OutputResponse.CODE_EXCEPTION, outputResponse.getStatusCode());
+        }
+
+        @Test
+        @DisplayName("setError should map a constraint violation to a code exception")
+        void setError_shouldMapConstraintViolation() {
+            outputResponse.setError(new ConstraintViolationException("duplicate key"));
+
+            assertEquals(OutputResponse.CODE_EXCEPTION, outputResponse.getStatusCode());
+        }
+    }
 }

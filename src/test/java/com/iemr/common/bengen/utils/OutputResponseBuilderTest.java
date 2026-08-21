@@ -31,10 +31,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.iemr.common.bengen.utils.exception.IEMRException;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("OutputResponse.Builder Test Suite")
@@ -204,6 +208,159 @@ class OutputResponseBuilderTest {
             assertEquals(OutputResponse.Builder.GENERIC_FAILURE, response.get("statusCode").getAsInt());
             assertEquals("Failed with generic exception", response.get("statusMessage").getAsString());
             assertEquals("something odd", response.get("statusMessageLong").getAsString());
+        }
+    }
+
+    @Nested
+    @DisplayName("Value semantics of the built response")
+    class ValueSemanticsTests {
+
+        private OutputResponse response(String methodName) {
+            return new OutputResponse.Builder().setMethodName(methodName).build();
+        }
+
+        @Test
+        @DisplayName("two responses built from the same fields should be equal and share a hash code")
+        void responsesFromSameFields_shouldBeEqual() {
+            assertEquals(response("m"), response("m"));
+            assertEquals(response("m").hashCode(), response("m").hashCode());
+        }
+
+        @Test
+        @DisplayName("responses built from different fields should not be equal")
+        void responsesFromDifferentFields_shouldNotBeEqual() {
+            assertNotEquals(response("first"), response("second"));
+        }
+
+        @Test
+        @DisplayName("a response should equal itself and never equal null or an unrelated type")
+        void response_shouldEqualItselfAndNotOtherTypes() {
+            OutputResponse built = response("m");
+
+            assertEquals(built, built);
+            assertNotEquals(built, null);
+            assertNotEquals(built, "not an OutputResponse");
+        }
+
+        @Test
+        @DisplayName("getResponse should expose the assembled JSON element")
+        void getResponse_shouldExposeAssembledJsonElement() {
+            JsonElement element = response("generateBeneficiaryIDs").getResponse();
+
+            assertNotNull(element);
+            assertEquals("generateBeneficiaryIDs",
+                    element.getAsJsonObject().get("methodName").getAsString());
+        }
+
+        @Test
+        @DisplayName("setResponse should replace the assembled payload")
+        void setResponse_shouldReplaceAssembledPayload() {
+            OutputResponse built = response("m");
+            JsonObject replacement = new JsonObject();
+            replacement.addProperty("methodName", "replaced");
+
+            built.setResponse(replacement);
+
+            assertEquals("replaced", built.getResponse().getAsJsonObject().get("methodName").getAsString());
+        }
+
+        @Test
+        @DisplayName("a response with a null payload should differ from one carrying a payload")
+        void responseWithNullPayload_shouldDifferFromPopulated() {
+            OutputResponse built = response("m");
+            OutputResponse blank = response("m");
+            blank.setResponse(null);
+
+            assertNotEquals(built, blank);
+            assertNotEquals(blank, built);
+            assertDoesNotThrow(blank::hashCode);
+            assertDoesNotThrow(blank::toString);
+        }
+    }
+
+    @Nested
+    @DisplayName("Error mapping for exception types raised by other AMRIT modules")
+    class ExternalExceptionMappingTests {
+
+        // The mapping switches on getClass().getSimpleName(), so locally declared types
+        // with the same simple names reach the arms meant for Hibernate/JDBC exceptions.
+        private static class MissingMandatoryFieldsException extends Exception {
+            MissingMandatoryFieldsException(String message) {
+                super(message);
+            }
+        }
+
+        private static class IllegalActionException extends Exception {
+            IllegalActionException(String message) {
+                super(message);
+            }
+        }
+
+        private static class JDBCException extends Exception {
+            JDBCException(String message) {
+                super(message);
+            }
+        }
+
+        private static class SQLGrammarException extends Exception {
+            SQLGrammarException(String message) {
+                super(message);
+            }
+        }
+
+        private static class ConstraintViolationException extends Exception {
+            ConstraintViolationException(String message) {
+                super(message);
+            }
+        }
+
+        @Test
+        @DisplayName("setErrorMessage should map a missing mandatory field to the params-missing code")
+        void setErrorMessage_shouldMapMissingMandatoryFields() {
+            JsonObject response = build(new OutputResponse.Builder()
+                    .setErrorMessage(new MissingMandatoryFieldsException("benCount is required")));
+
+            assertEquals(OutputResponse.Builder.MANDATORY_PARAMS_MISSING, response.get("statusCode").getAsInt());
+            assertEquals("Missing Mandatory Parameters.", response.get("statusMessage").getAsString());
+            assertEquals("benCount is required", response.get("statusMessageLong").getAsString());
+        }
+
+        @Test
+        @DisplayName("setErrorMessage should map an illegal action to the illegal-action code")
+        void setErrorMessage_shouldMapIllegalAction() {
+            JsonObject response = build(new OutputResponse.Builder()
+                    .setErrorMessage(new IllegalActionException("not permitted")));
+
+            assertEquals(OutputResponse.Builder.ILLEGAL_ACTION, response.get("statusCode").getAsInt());
+            assertTrue(response.get("statusMessage").getAsString().startsWith("Illegal Action performed"));
+        }
+
+        @Test
+        @DisplayName("setErrorMessage should map a JDBC failure to the environment code")
+        void setErrorMessage_shouldMapJdbcFailure() {
+            JsonObject response = build(new OutputResponse.Builder()
+                    .setErrorMessage(new JDBCException("pool exhausted")));
+
+            assertEquals(OutputResponse.Builder.ENVIRONMENT_EXCEPTION, response.get("statusCode").getAsInt());
+            assertTrue(response.get("statusMessage").getAsString().startsWith("Failed with DB connection issues at "));
+        }
+
+        @Test
+        @DisplayName("setErrorMessage should map a SQL grammar failure to the code-exception code")
+        void setErrorMessage_shouldMapSqlGrammarFailure() {
+            JsonObject response = build(new OutputResponse.Builder()
+                    .setErrorMessage(new SQLGrammarException("bad column")));
+
+            assertEquals(OutputResponse.Builder.CODE_EXCEPTION, response.get("statusCode").getAsInt());
+        }
+
+        @Test
+        @DisplayName("setErrorMessage should map a constraint violation to the code-exception code")
+        void setErrorMessage_shouldMapConstraintViolation() {
+            JsonObject response = build(new OutputResponse.Builder()
+                    .setErrorMessage(new ConstraintViolationException("duplicate key")));
+
+            assertEquals(OutputResponse.Builder.CODE_EXCEPTION, response.get("statusCode").getAsInt());
         }
     }
 }

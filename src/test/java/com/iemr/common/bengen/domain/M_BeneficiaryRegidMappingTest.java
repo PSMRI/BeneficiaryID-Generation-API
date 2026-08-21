@@ -22,11 +22,16 @@
 package com.iemr.common.bengen.domain;
 
 import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -38,6 +43,7 @@ class M_BeneficiaryRegidMappingTest {
     private static final Long BEN_REG_ID = 753812721192L;
     private static final Long BENEFICIARY_ID = 796702837334L;
     private static final Timestamp CREATED_DATE = Timestamp.valueOf("2025-06-25 10:00:00");
+    private static final Timestamp OTHER_DATE = Timestamp.valueOf("2030-01-01 00:00:00");
 
     private M_BeneficiaryRegidMapping row() {
         return new M_BeneficiaryRegidMapping(BEN_REG_ID, BENEFICIARY_ID, CREATED_DATE, "admin");
@@ -147,6 +153,94 @@ class M_BeneficiaryRegidMappingTest {
 
             assertTrue(json.contains("\"createdDate\":null"), json);
             assertTrue(json.contains("\"createdBy\":null"), json);
+        }
+    }
+
+    @Nested
+    @DisplayName("Generated equality across every field")
+    class PerFieldEqualityTests {
+
+        /** One mutator per field, so every generated equality branch is exercised. */
+        private List<Map.Entry<String, Consumer<M_BeneficiaryRegidMapping>>> differingValues() {
+            return List.of(
+                    Map.entry("benRegId", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setBenRegId(1L)),
+                    Map.entry("beneficiaryId", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setBeneficiaryId(2L)),
+                    Map.entry("provisioned", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setProvisioned(true)),
+                    Map.entry("reserved", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setReserved(true)),
+                    Map.entry("vanID", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setVanID(99)),
+                    Map.entry("createdDate", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setCreatedDate(OTHER_DATE)),
+                    Map.entry("createdBy", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setCreatedBy("someone")),
+                    Map.entry("benIDRequired", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setBenIDRequired(1L)));
+        }
+
+        private List<Map.Entry<String, Consumer<M_BeneficiaryRegidMapping>>> nullValues() {
+            return List.of(
+                    Map.entry("benRegId", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setBenRegId(null)),
+                    Map.entry("beneficiaryId", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setBeneficiaryId(null)),
+                    Map.entry("provisioned", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setProvisioned(null)),
+                    Map.entry("reserved", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setReserved(null)),
+                    Map.entry("vanID", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setVanID(null)),
+                    Map.entry("createdDate", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setCreatedDate(null)),
+                    Map.entry("createdBy", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setCreatedBy(null)),
+                    Map.entry("benIDRequired", (Consumer<M_BeneficiaryRegidMapping>) r -> r.setBenIDRequired(null)));
+        }
+
+        @Test
+        @DisplayName("a difference in any single field should break equality")
+        void equals_shouldDetectDifferenceInEveryField() {
+            assertAll(differingValues().stream().map(field -> () -> {
+                M_BeneficiaryRegidMapping variant = fullyPopulated();
+                field.getValue().accept(variant);
+                assertNotEquals(fullyPopulated(), variant,
+                        "changing " + field.getKey() + " must break equality");
+            }));
+        }
+
+        @Test
+        @DisplayName("a null in any single field should break equality in both directions")
+        void equals_shouldDetectNullInEveryField() {
+            assertAll(nullValues().stream().map(field -> () -> {
+                M_BeneficiaryRegidMapping variant = fullyPopulated();
+                field.getValue().accept(variant);
+                assertNotEquals(fullyPopulated(), variant,
+                        "nulling " + field.getKey() + " must break equality");
+                assertNotEquals(variant, fullyPopulated(),
+                        "equality must stay symmetric when " + field.getKey() + " is null");
+            }));
+        }
+
+        @Test
+        @DisplayName("hashCode should tolerate a null in any single field")
+        void hashCode_shouldTolerateNullInEveryField() {
+            assertAll(nullValues().stream().map(field -> () -> {
+                M_BeneficiaryRegidMapping variant = fullyPopulated();
+                field.getValue().accept(variant);
+                assertDoesNotThrow(variant::hashCode,
+                        "hashCode must not fail when " + field.getKey() + " is null");
+            }));
+        }
+
+        @Test
+        @DisplayName("two rows sharing the same null field should still be equal")
+        void equals_shouldTreatMatchingNullFieldsAsEqual() {
+            assertAll(nullValues().stream().map(field -> () -> {
+                M_BeneficiaryRegidMapping first = fullyPopulated();
+                M_BeneficiaryRegidMapping second = fullyPopulated();
+                field.getValue().accept(first);
+                field.getValue().accept(second);
+                assertEquals(first, second,
+                        "rows sharing a null " + field.getKey() + " must remain equal");
+                assertEquals(first.hashCode(), second.hashCode());
+            }));
+        }
+
+        @Test
+        @DisplayName("a row should equal itself and never equal null")
+        void row_shouldEqualItselfAndNotNull() {
+            M_BeneficiaryRegidMapping row = fullyPopulated();
+
+            assertEquals(row, row);
+            assertNotEquals(row, null);
         }
     }
 }
