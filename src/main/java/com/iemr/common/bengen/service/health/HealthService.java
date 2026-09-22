@@ -24,6 +24,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -47,8 +48,16 @@ public class HealthService {
     private static final String RESPONSE_TIME_KEY = "responseTimeMs";
     private static final long MYSQL_TIMEOUT_SECONDS = 3;
     private static final long REDIS_TIMEOUT_SECONDS = 3;
+    private static final long BENEFICIARY_POOL_TIMEOUT_SECONDS = 3;
     private static final long ADVANCED_CHECKS_THROTTLE_SECONDS = 30;
+    private static final long POOL_CHECK_THROTTLE_SECONDS = 30;
     private static final long RESPONSE_TIME_THRESHOLD_MS = 2000;
+    private static final String BENEFICIARY_POOL_KEY = "beneficiaryIdPool";
+    private static final String AVAILABLE_IDS_KEY = "availableIds";
+    private static final String THRESHOLD_KEY = "threshold";
+    // Mirrors BeneficiaryIdRepo.countBenID(): unprovisioned and unreserved IDs are the usable pool.
+    private static final String COUNT_AVAILABLE_IDS_SQL =
+            "SELECT COUNT(*) FROM m_beneficiaryregidmapping WHERE Provisioned = 0 AND Reserved = 0";
     private static final String DIAGNOSTIC_LOCK_WAIT = "MYSQL_LOCK_WAIT";
     private static final String DIAGNOSTIC_SLOW_QUERIES = "MYSQL_SLOW_QUERIES";
     private static final String DIAGNOSTIC_POOL_EXHAUSTED = "MYSQL_POOL_EXHAUSTED";
@@ -61,14 +70,24 @@ public class HealthService {
     private volatile long lastAdvancedCheckTime = 0;
     private volatile AdvancedCheckResult cachedAdvancedCheckResult = null;
     private final ReentrantReadWriteLock advancedCheckLock = new ReentrantReadWriteLock();
-    
+
+    // Warn when the usable beneficiary ID pool falls below this count
+    private final int minAvailableBeneficiaryIds;
+
+    // Cached pool count so frequent health polls do not repeatedly scan the table.
+    // A benign race here only costs one extra COUNT query, so no lock is needed.
+    private volatile long lastPoolCheckTime = 0;
+    private volatile Long cachedAvailableIdCount = null;
+
     // Advanced checks always enabled
     private static final boolean ADVANCED_HEALTH_CHECKS_ENABLED = true;
 
     public HealthService(DataSource dataSource,
-                        @Autowired(required = false) RedisTemplate<String, Object> redisTemplate) {
+                        @Autowired(required = false) RedisTemplate<String, Object> redisTemplate,
+                        @Value("${health.min-available-beneficiary-ids:5000}") int minAvailableBeneficiaryIds) {
         this.dataSource = dataSource;
         this.redisTemplate = redisTemplate;
+        this.minAvailableBeneficiaryIds = minAvailableBeneficiaryIds;
         this.executorService = Executors.newFixedThreadPool(6);
     }
 
@@ -90,59 +109,179 @@ public class HealthService {
     }
 
     public Map<String, Object> checkHealth() {
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("timestamp", Instant.now().toString());
-        
         Map<String, Object> mysqlStatus = new ConcurrentHashMap<>();
         Map<String, Object> redisStatus = new ConcurrentHashMap<>();
-        
+        Map<String, Object> beneficiaryPoolStatus = new ConcurrentHashMap<>();
+
         Future<?> mysqlFuture = executorService.submit(
             () -> performHealthCheck("MySQL", mysqlStatus, this::checkMySQLHealthSync));
         Future<?> redisFuture = executorService.submit(
             () -> performHealthCheck("Redis", redisStatus, this::checkRedisHealthSync));
-        
-        // Wait for both checks to complete with combined timeout (shared deadline)
-        long maxTimeout = Math.max(MYSQL_TIMEOUT_SECONDS, REDIS_TIMEOUT_SECONDS) + 1;
-        awaitHealthChecks(mysqlFuture, redisFuture, maxTimeout);
-        
+        Future<?> beneficiaryPoolFuture = executorService.submit(
+            () -> checkBeneficiaryIdPool(beneficiaryPoolStatus));
+
+        // Wait for all checks to complete with combined timeout (shared deadline)
+        long maxTimeout = Math.max(Math.max(MYSQL_TIMEOUT_SECONDS, REDIS_TIMEOUT_SECONDS),
+                                   BENEFICIARY_POOL_TIMEOUT_SECONDS) + 1;
+        awaitHealthChecks(maxTimeout, mysqlFuture, redisFuture, beneficiaryPoolFuture);
+
         // Ensure timed-out or unfinished components are marked DOWN
         ensurePopulated(mysqlStatus, "MySQL");
         ensurePopulated(redisStatus, "Redis");
-        
-        Map<String, Map<String, Object>> components = new LinkedHashMap<>();
-        components.put("mysql", mysqlStatus);
-        components.put("redis", redisStatus);
-        
-        response.put("components", components);
-        
-        // Compute overall status
-        String overallStatus = computeOverallStatus(components);
-        response.put(STATUS_KEY, overallStatus);
-        
+        if (!beneficiaryPoolStatus.containsKey(STATUS_KEY)) {
+            markPoolUnknown(beneficiaryPoolStatus, "Beneficiary ID pool check did not complete in time");
+        }
+
+        // Build response in the standardized AMRIT shape (aligned with Common-API):
+        // top-level status + checkedAt, then per-service status/severity summaries.
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        response.put(STATUS_KEY, computeOverallStatus(mysqlStatus, redisStatus, beneficiaryPoolStatus));
+        response.put("checkedAt", Instant.now().toString());
+
+        // Expose only status and severity; keep diagnostics (responseTime, messages) internal
+        response.put("mysql", summarize(mysqlStatus));
+        response.put("redis", summarize(redisStatus));
+        // The pool also reports its count and threshold, which operators need to act on the warning
+        response.put(BENEFICIARY_POOL_KEY, summarizeBeneficiaryPool(beneficiaryPoolStatus));
+
         return response;
     }
 
-    private void awaitHealthChecks(Future<?> mysqlFuture, Future<?> redisFuture, long maxTimeoutSeconds) {
+    private Map<String, Object> summarize(Map<String, Object> componentStatus) {
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put(STATUS_KEY, componentStatus.get(STATUS_KEY));
+        summary.put(SEVERITY_KEY, componentStatus.get(SEVERITY_KEY));
+        return summary;
+    }
+
+    private Map<String, Object> summarizeBeneficiaryPool(Map<String, Object> componentStatus) {
+        Map<String, Object> summary = summarize(componentStatus);
+        if (componentStatus.containsKey(AVAILABLE_IDS_KEY)) {
+            summary.put(AVAILABLE_IDS_KEY, componentStatus.get(AVAILABLE_IDS_KEY));
+        }
+        summary.put(THRESHOLD_KEY, minAvailableBeneficiaryIds);
+        if (componentStatus.containsKey(MESSAGE_KEY)) {
+            summary.put(MESSAGE_KEY, componentStatus.get(MESSAGE_KEY));
+        }
+        if (componentStatus.containsKey(ERROR_KEY)) {
+            summary.put(ERROR_KEY, componentStatus.get(ERROR_KEY));
+        }
+        return summary;
+    }
+
+    /**
+     * Overall status is DOWN if any component is DOWN, DEGRADED if any component
+     * reports a warning (for example a low beneficiary ID pool), otherwise UP.
+     */
+    @SafeVarargs
+    private final String computeOverallStatus(Map<String, Object>... componentStatuses) {
+        boolean hasDegraded = false;
+        for (Map<String, Object> componentStatus : componentStatuses) {
+            String status = (String) componentStatus.get(STATUS_KEY);
+            String severity = (String) componentStatus.get(SEVERITY_KEY);
+            if (STATUS_DOWN.equals(status) || SEVERITY_CRITICAL.equals(severity)) {
+                return STATUS_DOWN;
+            }
+            if (STATUS_DEGRADED.equals(status) || SEVERITY_WARNING.equals(severity)) {
+                hasDegraded = true;
+            }
+        }
+        return hasDegraded ? STATUS_DEGRADED : STATUS_UP;
+    }
+
+    private void awaitHealthChecks(long maxTimeoutSeconds, Future<?>... futures) {
         long deadlineNs = System.nanoTime() + TimeUnit.SECONDS.toNanos(maxTimeoutSeconds);
         try {
-            mysqlFuture.get(maxTimeoutSeconds, TimeUnit.SECONDS);
-            long remainingNs = deadlineNs - System.nanoTime();
-            if (remainingNs > 0) {
-                redisFuture.get(remainingNs, TimeUnit.NANOSECONDS);
-            } else {
-                redisFuture.cancel(true);
+            for (Future<?> future : futures) {
+                long remainingNs = deadlineNs - System.nanoTime();
+                if (remainingNs <= 0) {
+                    future.cancel(true);
+                    continue;
+                }
+                future.get(remainingNs, TimeUnit.NANOSECONDS);
             }
         } catch (TimeoutException e) {
             logger.warn("Health check aggregate timeout after {} seconds", maxTimeoutSeconds);
-            mysqlFuture.cancel(true);
-            redisFuture.cancel(true);
+            cancelAll(futures);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.warn("Health check was interrupted");
-            mysqlFuture.cancel(true);
-            redisFuture.cancel(true);
+            cancelAll(futures);
         } catch (Exception e) {
             logger.warn("Health check execution error: {}", e.getMessage());
+        }
+    }
+
+    private void cancelAll(Future<?>... futures) {
+        for (Future<?> future : futures) {
+            future.cancel(true);
+        }
+    }
+
+    /**
+     * Flags a WARNING when the usable beneficiary ID pool drops below the configured
+     * threshold, so a draining pool is visible before registration stops entirely.
+     * Reported as DEGRADED rather than DOWN, so the endpoint still returns HTTP 200.
+     */
+    private void checkBeneficiaryIdPool(Map<String, Object> status) {
+        long startTime = System.currentTimeMillis();
+        try {
+            long availableIds = countAvailableBeneficiaryIdsWithThrottle();
+            status.put(RESPONSE_TIME_KEY, System.currentTimeMillis() - startTime);
+            status.put(AVAILABLE_IDS_KEY, availableIds);
+
+            if (availableIds < minAvailableBeneficiaryIds) {
+                status.put(STATUS_KEY, STATUS_DEGRADED);
+                status.put(SEVERITY_KEY, SEVERITY_WARNING);
+                status.put(MESSAGE_KEY, "Available beneficiary ID pool is below the configured threshold");
+                logger.warn("Beneficiary ID pool low: {} available, warning threshold is {}",
+                        availableIds, minAvailableBeneficiaryIds);
+            } else {
+                status.put(STATUS_KEY, STATUS_UP);
+                status.put(SEVERITY_KEY, SEVERITY_OK);
+            }
+        } catch (Exception e) {
+            logger.warn("Beneficiary ID pool check failed: {}", e.getMessage(), e);
+            status.put(RESPONSE_TIME_KEY, System.currentTimeMillis() - startTime);
+            // A failed count is not an outage: MySQL itself is checked separately, so this
+            // stays DEGRADED to avoid a slow count returning 503 and dropping the instance
+            // out of load-balancer rotation.
+            markPoolUnknown(status, "Beneficiary ID pool count could not be determined");
+        }
+    }
+
+    private void markPoolUnknown(Map<String, Object> status, String error) {
+        status.put(STATUS_KEY, STATUS_DEGRADED);
+        status.put(SEVERITY_KEY, SEVERITY_WARNING);
+        status.put(ERROR_KEY, error);
+    }
+
+    private long countAvailableBeneficiaryIdsWithThrottle() throws Exception {
+        long currentTime = System.currentTimeMillis();
+        Long cached = cachedAvailableIdCount;
+        if (cached != null && (currentTime - lastPoolCheckTime) < POOL_CHECK_THROTTLE_SECONDS * 1000) {
+            return cached;
+        }
+
+        long availableIds = countAvailableBeneficiaryIds();
+        lastPoolCheckTime = currentTime;
+        cachedAvailableIdCount = availableIds;
+        return availableIds;
+    }
+
+    private long countAvailableBeneficiaryIds() throws Exception {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(COUNT_AVAILABLE_IDS_SQL)) {
+
+            stmt.setQueryTimeout((int) BENEFICIARY_POOL_TIMEOUT_SECONDS);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new IllegalStateException("No result from beneficiary ID pool count query");
+                }
+                return rs.getLong(1);
+            }
         }
     }
 
@@ -256,38 +395,6 @@ public class HealthService {
         }
         
         return SEVERITY_OK;
-    }
-
-    private String computeOverallStatus(Map<String, Map<String, Object>> components) {
-        boolean hasCritical = false;
-        boolean hasDegraded = false;
-        
-        for (Map<String, Object> componentStatus : components.values()) {
-            String status = (String) componentStatus.get(STATUS_KEY);
-            String severity = (String) componentStatus.get(SEVERITY_KEY);
-            
-            if (STATUS_DOWN.equals(status) || SEVERITY_CRITICAL.equals(severity)) {
-                hasCritical = true;
-            }
-            
-            if (STATUS_DEGRADED.equals(status)) {
-                hasDegraded = true;
-            }
-            
-            if (SEVERITY_WARNING.equals(severity)) {
-                hasDegraded = true;
-            }
-        }
-        
-        if (hasCritical) {
-            return STATUS_DOWN;
-        }
-        
-        if (hasDegraded) {
-            return STATUS_DEGRADED;
-        }
-        
-        return STATUS_UP;
     }
 
     // Internal advanced health checks for MySQL - do not expose details in responses

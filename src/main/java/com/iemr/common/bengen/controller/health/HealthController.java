@@ -53,7 +53,7 @@ public class HealthController {
             
             Map<String, Object> errorResponse = Map.of(
                 "status", "DOWN",
-                "timestamp", Instant.now().toString()
+                "checkedAt", Instant.now().toString()
             );
             
             return new ResponseEntity<>(errorResponse, HttpStatus.SERVICE_UNAVAILABLE);

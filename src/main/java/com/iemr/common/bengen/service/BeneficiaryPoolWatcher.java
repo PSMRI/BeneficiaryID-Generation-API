@@ -19,36 +19,34 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see https://www.gnu.org/licenses/.
 */
-package com.iemr.common.bengen.config.quartz;
+package com.iemr.common.bengen.service;
 
-import org.quartz.DisallowConcurrentExecution;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-import com.iemr.common.bengen.service.GenerateBeneficiaryService;
 
-@Service
-@DisallowConcurrentExecution
-public class ScheduleJobServiceForBenGen implements Job {
+@Component
+@ConditionalOnProperty(name = "bengen.pool-watcher-enabled", havingValue = "true", matchIfMissing = true)
+public class BeneficiaryPoolWatcher {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
 	@Autowired
 	GenerateBeneficiaryService generateBeneficiaryService;
 
-	@Override
-	public void execute(JobExecutionContext context) throws JobExecutionException {
-		logger.info("Started scheduled beneficiary ID top-up");
+	@Scheduled(initialDelayString = "${bengen.pool-watcher-initial-delay-ms:60000}",
+			fixedDelayString = "${bengen.pool-watcher-interval-ms:300000}")
+	public void watchPool() {
 		try {
 			int inserted = generateBeneficiaryService.topUpPoolIfBelowLimit();
-			logger.info("Completed scheduled beneficiary ID top-up, inserted {} IDs", inserted);
+			if (inserted > 0) {
+				logger.info("Pool watcher topped up {} beneficiary IDs", inserted);
+			}
 		} catch (Exception e) {
-			logger.error("Scheduled beneficiary ID top-up failed", e);
-			throw new JobExecutionException(e, false);
+			logger.error("Pool watcher top-up failed", e);
 		}
 	}
 }
