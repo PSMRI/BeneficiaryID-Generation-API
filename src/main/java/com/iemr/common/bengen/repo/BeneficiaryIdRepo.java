@@ -114,10 +114,14 @@ public interface BeneficiaryIdRepo extends CrudRepository<BeneficiaryId, BigInte
 			  + " WHERE benregMap.provisioned =false and benregMap.reserved =false")
 		Long countBenID();
 	
-		@Query(nativeQuery = true, value = "Select benregMap.benRegId, benregMap.beneficiaryId, " +
-				"benregMap.CreatedDate "
-				+ "from m_beneficiaryregidmapping  benregMap "
-				+ "where benregMap.provisioned =false and benregMap.reserved =true " +
-				"and benregMap.vanID=:vanID order by benregMap.benRegId desc limit :num ")
-		List<Object[]> getBenIDGenerated(@Param("vanID") Integer vanID, @Param("num") Long num);
+		@Query(nativeQuery = true, value = "Select benregMap.benRegId, benregMap.beneficiaryId, "
+				+ "benregMap.CreatedDate "
+				+ "from m_beneficiaryregidmapping benregMap "
+				+ "where benregMap.provisioned =false and benregMap.reserved =true "
+				+ "and benregMap.vanID=:vanID and benregMap.CreatedDate >= :createdFrom "
+				+ "and benregMap.beneficiaryId in (:beneficiaryIds) "
+				+ "order by benregMap.benRegId")
+		List<Object[]> getBenIDGeneratedForRequest(@Param("vanID") Integer vanID,
+				@Param("createdFrom") Timestamp createdFrom,
+				@Param("beneficiaryIds") List<Long> beneficiaryIds);
 }

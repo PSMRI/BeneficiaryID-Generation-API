@@ -22,8 +22,6 @@
 package com.iemr.common.bengen.utils;
 
 import java.math.BigInteger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
 * 
@@ -32,26 +30,14 @@ import org.slf4j.LoggerFactory;
 */
 public class Generator {
 	
-	private static final Logger log = LoggerFactory.getLogger(Generator.class);
-
 	public BigInteger generateBeneficiaryId(){
 		BigInteger bid1 = generateFirst();
 		BigInteger bid2 = generateNumN(10);
-		if (log.isDebugEnabled()){
-			log.debug("bid1: "+bid1+" length: "+getDigitCount(bid1));
-			log.debug("bid2: "+bid2+" length: "+getDigitCount(bid2));
-		}
 		
 		BigInteger bid = bid1.add(bid2).multiply(new BigInteger("10"));
 		String chsum = Verhoeff.generateVerhoeff(bid.toString());
-		if (log.isDebugEnabled()){
-			log.debug("bid:  "+bid+" length: "+getDigitCount(bid)+" chsum: " + chsum);
-		}
 		
 		bid = bid.add(new BigInteger(chsum));
-		if (log.isDebugEnabled()){
-			log.debug("BENEFICIARY ID: " + bid /*+ ": Length: " + getDigitCount(bid)*/);
-		}
 		return bid;
 	}
 	
@@ -106,18 +92,12 @@ public class Generator {
 	
 	public int getRandomNum(){
 		int num = (int) (Math.random() * 100 % 10);
-		if (log.isDebugEnabled()){
-			log.debug("Rand generated: " + num);
-		}
 		return num;
 	}
 
 	public int getRandomNumRad(int rad){
 		int num = getRandomNum();
 		num = num % rad;
-		if (log.isDebugEnabled()){
-			log.debug("Rand generated ("+ rad + "): " + num);
-		}
 		return num;
 	}
 
@@ -129,27 +109,7 @@ public class Generator {
 			num = getRandomNumRadRange(rad1, rad2);
 		}
 
-		if (log.isDebugEnabled()){
-			log.debug("Rand range generated: " + num);
-		}
 		return num;
 	}
 
-	public void displayArrays(int[] myArr, int[] myArr2){
-		StringBuilder str = new StringBuilder();
-		for(int i=0;i<myArr.length;i++){
-			str.append(myArr[i]);
-		}
-		if (log.isDebugEnabled()){
-			log.debug("myarr : " + str);
-		}
-
-		str = new StringBuilder();
-		for(int i=0;i<myArr2.length;i++){
-			str.append(myArr2[i]);
-		}
-		if (log.isDebugEnabled()){
-			log.debug("myarr2: " + str);
-		}
-	}
 }

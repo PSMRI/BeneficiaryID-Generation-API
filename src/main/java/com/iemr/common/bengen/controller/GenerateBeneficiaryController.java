@@ -66,7 +66,7 @@ public class GenerateBeneficiaryController {
 			
 			String response = getSuccessResponseString(list, 200, "success", "generateBeneficiaryIDs");
 			
-			logger.info("generateBeneficiaryIDs response "+response.toString());
+			logger.info("generateBeneficiaryIDs returned {} IDs for vanID {}", list.size(), benMapping.getVanID());
 		/**
 		 * sending the response...
 		 */
@@ -82,8 +82,6 @@ public class GenerateBeneficiaryController {
 				private static final long serialVersionUID = 1L;
 			}.getType();
 		String data = OutputMapper.getInstance().gson().toJson(list, typeOfSrc);
-		logger.info("data: " + data);
-		logger.info("data.toStr: " + data.toString());
 		OutputResponse response = new OutputResponse.Builder().setDataJsonType("JsonObject.class")
 				.setStatusCode(statusCode).setStatusMessage(statusMsg)
 				.setDataObjectType(this.getClass().getSimpleName())
